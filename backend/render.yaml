@@ -5,7 +5,8 @@ services:
     plan: free
     rootDir: backend
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node server.js
+    port: 10000
     envVars:
       - key: NODE_ENV
         value: production
