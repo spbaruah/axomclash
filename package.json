@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "build": "cd frontend && npm run build",
+    "build": "cd backend && npm install",
     "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
     "setup": "node backend/scripts/setupDatabase.js",
     "setup-chat": "node backend/scripts/setupChatDatabase.js",

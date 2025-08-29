@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: axomclash-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    port: 10000
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MYSQL_ADDON_HOST
+        value: begr5npk9smo955afrh3-mysql.services.clever-cloud.com
+      - key: MYSQL_ADDON_DB
+        value: begr5npk9smo955afrh3
+      - key: MYSQL_ADDON_USER
+        value: u4ipbi08elhoxmsz
+      - key: MYSQL_ADDON_PORT
+        value: 3306
+      - key: MYSQL_ADDON_PASSWORD
+        value: zC08nyi3MEVOfI3EisgE
+      - key: MYSQL_ADDON_URI
+        value: mysql://u4ipbi08elhoxmsz:zC08nyi3MEVOfI3EisgE@begr5npk9smo955afrh3-mysql.services.clever-cloud.com:3306/begr5npk9smo955afrh3
+      - key: CLIENT_URL
+        value: https://your-frontend-domain.netlify.app
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 60000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 1000
+    healthCheckPath: /api/health
+    autoDeploy: true
