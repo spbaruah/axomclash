@@ -3,6 +3,7 @@ services:
     name: axomclash-backend
     env: node
     plan: free
+    rootDir: backend
     buildCommand: cd backend && npm install
     startCommand: cd backend && node server.js
     port: 10000
