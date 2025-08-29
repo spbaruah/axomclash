@@ -1,0 +1,190 @@
+.challenges-container {
+  min-height: 100vh;
+  padding: 24px;
+  padding-top: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.challenges-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.challenges-header h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.challenges-header p {
+  font-size: 1.1rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.coming-soon-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.coming-soon-content {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 60px 40px;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.coming-soon-icon {
+  font-size: 4rem;
+  color: #667eea;
+  margin-bottom: 24px;
+  animation: pulse 2s infinite;
+}
+
+.coming-soon-content h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.coming-soon-content p {
+  font-size: 1.2rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 40px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.challenge-types-preview {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+}
+
+.challenge-type {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  min-width: 160px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.challenge-type:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.type-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.type-icon.daily {
+  color: #ef4444;
+}
+
+.type-icon.weekly {
+  color: #f59e0b;
+}
+
+.type-icon.monthly {
+  color: #8b5cf6;
+}
+
+.challenge-type span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .challenges-container {
+    padding: 16px;
+    padding-top: 16px;
+  }
+  
+  .challenges-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .coming-soon-container {
+    padding: 20px 16px;
+  }
+  
+  .coming-soon-content {
+    padding: 40px 24px;
+  }
+  
+  .coming-soon-content h2 {
+    font-size: 2rem;
+  }
+  
+  .coming-soon-content p {
+    font-size: 1.1rem;
+  }
+  
+  .challenge-types-preview {
+    gap: 20px;
+  }
+  
+  .challenge-type {
+    min-width: 140px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .challenges-header h1 {
+    font-size: 2rem;
+  }
+  
+  .coming-soon-content {
+    padding: 32px 20px;
+  }
+  
+  .coming-soon-content h2 {
+    font-size: 1.8rem;
+  }
+  
+  .challenge-types-preview {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .challenge-type {
+    width: 100%;
+    max-width: 200px;
+  }
+}

@@ -1,0 +1,148 @@
+.post-management {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.post-management-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: white;
+}
+
+.management-header {
+  text-align: center;
+  margin-bottom: 40px;
+  color: white;
+}
+
+.management-header h2 {
+  font-size: 32px;
+  margin: 0 0 10px 0;
+  font-weight: 700;
+}
+
+.management-header p {
+  font-size: 16px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.post-item {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.post-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.post-type {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.post-date {
+  color: #666;
+  font-size: 12px;
+}
+
+.post-content p {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.post-content strong {
+  color: #2c3e50;
+}
+
+.post-stats {
+  display: flex;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.post-stats span {
+  color: #666;
+  font-size: 14px;
+}
+
+.post-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn.view {
+  background: rgba(52, 152, 219, 0.2);
+  color: #3498db;
+}
+
+.action-btn.edit {
+  background: rgba(241, 196, 15, 0.2);
+  color: #f39c12;
+}
+
+.action-btn.delete {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+}
+
+.action-btn:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .post-item {
+    padding: 20px;
+  }
+  
+  .management-header h2 {
+    font-size: 28px;
+  }
+  
+  .post-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

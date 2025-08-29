@@ -1,0 +1,33 @@
+{
+  "name": "campusclash",
+  "version": "1.0.0",
+  "description": "College vs College Social Gaming Platform",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "build": "cd frontend && npm run build",
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "setup": "node backend/scripts/setupDatabase.js",
+    "setup-chat": "node backend/scripts/setupChatDatabase.js",
+
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "college",
+    "gaming",
+    "social",
+    "platform",
+
+    "competition"
+  ],
+  "author": "CampusClash Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2"
+  }
+}

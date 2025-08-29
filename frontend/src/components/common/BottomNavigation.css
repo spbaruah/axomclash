@@ -1,0 +1,356 @@
+.bottom-navigation {
+  position: fixed;
+  bottom: 50px;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 25px;
+  z-index: 1000;
+  padding: 6px 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  width: min(500px, calc(100vw - 40px));
+  margin: 0 auto;
+  margin-bottom: 15px;
+}
+
+/* Responsive widths using CSS Grid approach */
+@media (min-width: 1200px) {
+  .bottom-navigation {
+    width: min(600px, calc(100vw - 40px));
+  }
+}
+
+@media (min-width: 1600px) {
+  .bottom-navigation {
+    width: min(700px, calc(100vw - 40px));
+  }
+}
+
+.bottom-nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 25px;
+  position: relative;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #999;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  min-width: 50px;
+  z-index: 2;
+}
+
+.bottom-nav-item:hover {
+  color: #7B42F6;
+  transform: translateY(-3px);
+}
+
+.bottom-nav-item.active {
+  color: #7B42F6;
+}
+
+.nav-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px; /* Further reduced from 40px to 35px */
+  height: 35px; /* Further reduced from 40px to 35px */
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 2px; /* Further reduced from 4px to 2px */
+}
+
+.bottom-nav-item.active .nav-icon-wrapper {
+  background: linear-gradient(135deg, #7B42F6 0%, #C86DD7 100%);
+  box-shadow: 0 4px 15px rgba(123, 66, 246, 0.4);
+}
+
+.bottom-nav-item:hover .nav-icon-wrapper {
+  background: rgba(123, 66, 246, 0.1);
+}
+
+.nav-icon {
+  font-size: 1.1rem; /* Further reduced from 1.2rem to 1.1rem */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bottom-nav-item.active .nav-icon {
+  color: white;
+}
+
+.nav-label {
+  font-size: 0.6rem; /* Further reduced from 0.65rem to 0.6rem */
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.8;
+}
+
+.bottom-nav-item.active .nav-label {
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* Main action button (Post) styling */
+.main-action .nav-icon-wrapper {
+  width: 45px; /* Further reduced from 55px to 45px */
+  height: 45px; /* Further reduced from 55px to 45px */
+  background: linear-gradient(135deg, #7B42F6 0%, #C86DD7 100%);
+  box-shadow: 0 6px 20px rgba(123, 66, 246, 0.4);
+  transform: translateY(-6px); /* Further reduced from -8px to -6px */
+  margin-bottom: 4px; /* Further reduced from 6px to 4px */
+}
+
+.main-action .nav-icon {
+  color: white;
+  font-size: 1.4rem; /* Further reduced from 1.6rem to 1.4rem */
+}
+
+.main-action .nav-label {
+  color: #7B42F6;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.main-button-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7B42F6 0%, #C86DD7 100%);
+  opacity: 0.3;
+  filter: blur(10px);
+  z-index: -1;
+  animation: mainPulse 2s infinite;
+}
+
+@keyframes mainPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+}
+
+/* Hover effects for main button */
+.main-action:hover .nav-icon-wrapper {
+  transform: translateY(-12px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(123, 66, 246, 0.5);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .bottom-navigation {
+    bottom: 40px;
+    left: 15px; /* Reduced from 30px to add more margin */
+    right: 15px; /* Reduced from 30px to add more margin */
+    padding: 5px 0; /* Further reduced from 8px to 5px */
+    margin-bottom: 10px;
+    margin-left: 15px; /* Added left margin */
+    margin-right: 15px; /* Added right margin */
+  }
+  
+  .bottom-nav-container {
+    padding: 0 20px;
+  }
+  
+  .nav-icon-wrapper {
+    width: 30px; /* Further reduced from 35px to 30px */
+    height: 30px; /* Further reduced from 35px to 30px */
+  }
+  
+  .main-action .nav-icon-wrapper {
+    width: 38px; /* Further reduced from 45px to 38px */
+    height: 38px; /* Further reduced from 45px to 38px */
+  }
+  
+  .nav-icon {
+    font-size: 1rem; /* Further reduced from 1.1rem to 1rem */
+  }
+  
+  .main-action .nav-icon {
+    font-size: 1.2rem; /* Further reduced from 1.4rem to 1.2rem */
+  }
+  
+  .nav-label {
+    font-size: 0.55rem; /* Further reduced from 0.6rem to 0.55rem */
+  }
+}
+
+@media (max-width: 360px) {
+  .bottom-navigation {
+    bottom: 35px;
+    left: 10px; /* Further reduced from 25px to add more margin */
+    right: 10px; /* Further reduced from 25px to add more margin */
+    padding: 4px 0; /* Further reduced from 6px to 4px */
+    margin-bottom: 15px;
+    margin-left: 20px; /* Added more left margin for smallest screens */
+    margin-right: 20px; /* Added more right margin for smallest screens */
+  }
+  
+  .bottom-nav-container {
+    padding: 0 15px;
+  }
+  
+  .nav-icon-wrapper {
+    width: 26px; /* Further reduced from 30px to 26px */
+    height: 26px; /* Further reduced from 30px to 26px */
+  }
+  
+  .main-action .nav-icon-wrapper {
+    width: 34px; /* Further reduced from 40px to 34px */
+    height: 34px; /* Further reduced from 40px to 34px */
+  }
+  
+  .nav-icon {
+    font-size: 0.9rem; /* Further reduced from 1rem to 0.9rem */
+  }
+  
+  .main-action .nav-icon {
+    font-size: 1.1rem; /* Further reduced from 1.2rem to 1.1rem */
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .bottom-navigation {
+    background: rgba(30, 30, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .bottom-nav-item {
+    color: #aaa;
+  }
+  
+  .bottom-nav-item:hover {
+    color: #7B42F6;
+  }
+  
+  .main-action .nav-label {
+    color: #7B42F6;
+  }
+}
+
+/* Enhanced animations and transitions */
+@keyframes pageExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Active indicator */
+.active-indicator {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, #7B42F6 0%, #C86DD7 100%);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(123, 66, 246, 0.4);
+}
+
+/* Enhanced hover effects */
+.bottom-nav-item:hover .nav-icon-wrapper {
+  transform: translateY(-1px); /* Further reduced from -2px to -1px */
+  box-shadow: 0 6px 20px rgba(123, 66, 246, 0.15);
+}
+
+.bottom-nav-item:hover .nav-label {
+  color: #7B42F6;
+  transform: translateY(-1px);
+}
+
+/* Main action button enhanced animations */
+.main-action:hover .nav-icon-wrapper {
+  transform: translateY(-8px) scale(1.05); /* Further reduced from -10px to -8px */
+  box-shadow: 0 8px 25px rgba(123, 66, 246, 0.5);
+}
+
+.main-action:hover .nav-label {
+  transform: translateY(-2px);
+}
+
+/* Smooth transitions for all elements */
+.bottom-nav-item * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced main button glow animation */
+.main-button-glow {
+  animation: enhancedGlow 3s ease-in-out infinite;
+}
+
+@keyframes enhancedGlow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.6;
+  }
+}
+
+/* Active state enhancements */
+.bottom-nav-item.active .nav-icon-wrapper {
+  animation: activePulse 2s ease-in-out infinite;
+}
+
+@keyframes activePulse {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(123, 66, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 25px rgba(123, 66, 246, 0.6);
+  }
+}
+
+.bottom-nav-item.active .nav-label {
+  animation: labelGlow 2s ease-in-out infinite;
+}
+
+@keyframes labelGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(123, 66, 246, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(123, 66, 246, 0.6);
+  }
+}

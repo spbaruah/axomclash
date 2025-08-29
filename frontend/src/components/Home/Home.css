@@ -1,0 +1,1373 @@
+/* Home.css - Home component styles */
+
+/* Unified Background Section */
+.unified-background-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: 0 0 20px 0;
+  overflow: hidden;
+}
+
+/* Top Navigation Header */
+.top-nav-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: transparent;
+  border-bottom: 1px solid rgba(123, 66, 246, 0.1);
+  margin-bottom: 0;
+  margin-top: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+}
+
+.app-logo-image {
+  height: 70px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1); /* Makes the logo white */
+}
+
+.top-nav-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.nav-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 10px 16px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-decoration: none;
+}
+
+.nav-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.nav-btn svg {
+  font-size: 1.1rem;
+}
+
+.btn-text {
+  display: inline;
+}
+
+/* Feed Section */
+.feed-section {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.feed-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Mobile-specific feed improvements */
+@media (max-width: 768px) {
+  .feed-section {
+    padding: 15px;
+  }
+  
+  .feed-container {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .feed-section {
+    padding: 10px;
+  }
+  
+  .feed-container {
+    gap: 12px;
+  }
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.section-header h2 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.section-header p {
+  color: #666;
+  margin: 0 0 20px 0;
+  font-size: 1.1rem;
+}
+
+.create-post-btn {
+  background: linear-gradient(135deg, #7B42F6 0%, #C86DD7 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(123, 66, 246, 0.4);
+}
+
+.create-post-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(123, 66, 246, 0.6);
+}
+
+/* Post Card */
+.post-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+  position: relative;
+}
+
+.post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Post Header Styles */
+.post-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important; /* Center align items vertically by default */
+  padding: 15px 20px !important; /* Consistent padding across all screen sizes */
+  border-bottom: 1px solid #f0f0f0;
+  width: 100%;
+  flex-direction: row !important; /* Ensure horizontal layout */
+}
+
+/* Global rules to ensure post header layout consistency across ALL screen sizes */
+.post-header,
+.post-header * {
+  box-sizing: border-box;
+}
+
+/* Force the layout to stay horizontal and centered */
+.post-header {
+  flex-wrap: nowrap !important;
+  overflow: visible !important;
+}
+
+/* Additional rules to prevent any layout changes */
+.post-header {
+  min-height: 60px !important; /* Ensure consistent height */
+}
+
+/* Ensure user info stays in left column */
+.user-info {
+  max-width: calc(100% - 60px) !important; /* Leave space for 3-dot menu */
+  flex-shrink: 0 !important;
+}
+
+/* Ensure 3-dot menu stays in right position */
+.post-header-right {
+  width: 60px !important;
+  flex-shrink: 0 !important;
+  justify-content: center !important;
+}
+
+/* Override any potential conflicting media query rules */
+@media (min-width: 0px) {
+  .post-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 15px 20px !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    min-height: 60px !important;
+  }
+  
+  .user-info {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 !important;
+    gap: 6px !important;
+    flex-direction: row !important;
+    max-width: calc(100% - 60px) !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .post-header-right {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 60px !important;
+    flex-shrink: 0 !important;
+    flex-direction: row !important;
+  }
+}
+
+.user-info {
+  display: flex !important;
+  align-items: center !important; /* Center align items vertically by default */
+  flex: 1;
+  min-height: 40px; /* Ensure consistent height */
+  gap: 6px !important; /* Further reduced spacing between avatar and details */
+  flex-direction: row !important; /* Ensure horizontal layout */
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 12px;
+  background-color: #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-size: 1.2rem;
+  border: 3px solid rgba(123, 66, 246, 0.2);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-avatar svg {
+  font-size: 18px;
+  color: white;
+}
+
+/* Clickable user avatar and username styles */
+.user-avatar.clickable {
+  transition: all 0.2s ease;
+}
+
+.user-avatar.clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.user-details h4.clickable {
+  transition: color 0.2s ease;
+}
+
+.user-details h4.clickable:hover {
+  color: #1877f2;
+}
+
+.user-details {
+  flex: 1;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center;
+  min-height: 40px; /* Ensure consistent height */
+  align-items: flex-start !important; /* Left-align the text content */
+  flex-shrink: 0 !important; /* Prevent shrinking */
+}
+
+.user-details h4 {
+  margin: 0 0 2px 0;
+  font-size: 16px; /* Use mobile font size by default */
+  font-weight: 600; /* Medium-bold as requested */
+  color: #050505;
+  line-height: 1.2;
+}
+
+.post-college {
+  font-size: 13px; /* Use mobile font size by default */
+  color: #65676b; /* Gray color as requested */
+  margin: 0;
+  line-height: 1.2;
+}
+
+.post-time {
+  color: #8e8e93; /* Lighter gray for time */
+  font-size: 12px; /* Slightly smaller than college name */
+  margin-left: 6px; /* Small gap between college name and time */
+  font-weight: 400;
+}
+
+.post-header-right {
+  display: flex !important;
+  align-items: center !important; /* Center align vertically by default */
+  justify-content: flex-end !important; /* Right-align the content */
+  gap: 0;
+  min-height: 40px; /* Ensure consistent height */
+  flex-direction: row !important; /* Ensure horizontal layout */
+}
+
+.post-meta {
+  display: none; /* Hide timestamp and visibility by default for cleaner look */
+}
+
+.post-menu-container {
+  position: relative !important;
+  align-self: center !important; /* Center align vertically by default */
+  flex-shrink: 0 !important; /* Prevent shrinking */
+  order: 999 !important; /* Ensure it stays at the end */
+}
+
+.post-menu-btn {
+  background: none;
+  border: none;
+  padding: 10px; /* Use mobile padding by default */
+  border-radius: 50%;
+  cursor: pointer;
+  color: #65676b;
+  font-size: 16px; /* Use mobile font size by default */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-width: 44px; /* Ensure minimum touch target size */
+  min-height: 44px; /* Ensure minimum touch target size */
+}
+
+.post-menu-btn:hover {
+  background-color: #f0f2f5;
+}
+
+.post-menu-btn:active {
+  background-color: #e4e6eb;
+  transform: scale(0.95);
+}
+
+.post-menu-dropdown {
+  position: absolute;
+  right: -10px; /* Use mobile positioning by default */
+  top: 35px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 140px; /* Use mobile width by default */
+  overflow: hidden;
+}
+
+.post-menu-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 14px 16px; /* Use mobile padding by default */
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px; /* Use mobile font size by default */
+  color: #050505;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.post-menu-dropdown button:last-child {
+  border-bottom: none;
+}
+
+.post-menu-dropdown button:hover {
+  background-color: #f0f2f5;
+}
+
+.post-menu-dropdown button:active {
+  background-color: #e4e6eb;
+}
+
+.post-content {
+  padding: 0 20px 20px;
+}
+
+.post-content p {
+  margin: 0;
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.post-media {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.post-media img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Facebook-style post components */
+.post-stats {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-top: 1px solid #f0f0f0;
+  color: #65676b;
+  font-size: 0.9rem;
+}
+
+.reactions-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reaction-icons {
+  display: flex;
+  align-items: center;
+}
+
+.reaction-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: -4px;
+  box-shadow: 0 0 0 2px white;
+  background: white;
+}
+
+.reaction-count {
+  font-weight: 500;
+}
+
+.comments-summary {
+  font-weight: 500;
+}
+
+/* Facebook-style action buttons */
+.post-actions.facebook-style {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 0 20px 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.post-actions.facebook-style .action-btn {
+  background: transparent;
+  border: none;
+  color: #65676b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+}
+
+.post-actions.facebook-style .action-btn:hover {
+  background: #f0f2f5;
+}
+
+.post-actions.facebook-style .action-btn.active {
+  color: #1877f2;
+}
+
+.post-actions.facebook-style .like-btn.active.love { color: #f33e58; }
+.post-actions.facebook-style .like-btn.active.laugh { color: #f7b125; }
+.post-actions.facebook-style .like-btn.active.wow { color: #f7b125; }
+.post-actions.facebook-style .like-btn.active.sad { color: #f7b125; }
+.post-actions.facebook-style .like-btn.active.angry { color: #e9710f; }
+.post-actions.facebook-style .like-btn.active.fire { color: #e9710f; }
+.post-actions.facebook-style .like-btn.active.clap { color: #1877f2; }
+
+/* Facebook-style reactions popup */
+.reactions-popup {
+  position: absolute;
+  bottom: 45px;
+  left: 20px;
+  background: white;
+  border-radius: 28px;
+  padding: 4px 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all 0.2s ease;
+}
+
+.reactions-popup.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.reaction-options {
+  display: flex;
+  gap: 2px;
+}
+
+.reaction-option {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.reaction-option:hover {
+  transform: scale(1.3) translateY(-5px);
+}
+
+.reaction-tooltip {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+
+.reaction-option:hover .reaction-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* No Posts State */
+.no-posts {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.no-posts p {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 0 0 20px 0;
+}
+
+.create-first-post-btn {
+  background: linear-gradient(135deg, #7B42F6 0%, #C86DD7 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(123, 66, 246, 0.4);
+}
+
+.create-first-post-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(123, 66, 246, 0.6);
+}
+
+/* Loading and Error States */
+.home-loading,
+.home-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #7B42F6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.home-error h3 {
+  color: #333;
+  margin: 0 0 15px 0;
+  font-size: 1.5rem;
+}
+
+.home-error p {
+  color: #666;
+  margin: 0 0 25px 0;
+  font-size: 1.1rem;
+}
+
+.retry-btn {
+  background: linear-gradient(135deg, #7B42F6 0%, #C86DD7 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(123, 66, 246, 0.4);
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(123, 66, 246, 0.6);
+}
+
+/* Share Modal Styles */
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.share-modal {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.share-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #f0f0f0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 20px 20px 0 0;
+}
+
+.share-modal-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.share-modal-content {
+  padding: 25px;
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.share-option {
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  border-radius: 15px;
+  padding: 15px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  min-height: 90px;
+  justify-content: center;
+}
+
+.share-option:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.share-option.copy-link {
+  border-color: #7B42F6;
+  background: rgba(123, 66, 246, 0.1);
+}
+
+.share-option.copy-link:hover {
+  background: #7B42F6;
+  color: white;
+}
+
+.share-option.social-share {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.share-option.social-share:hover {
+  background: #4caf50;
+  color: white;
+}
+
+.share-option.email-share {
+  border-color: #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.share-option.email-share:hover {
+  background: #ff9800;
+  color: white;
+}
+
+.share-option.share-to-chat {
+  border-color: #2196F3;
+  background: rgba(33, 150, 243, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.share-option.share-to-chat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.share-option.share-to-chat:hover::before {
+  left: 100%;
+}
+
+.share-option.share-to-chat:hover {
+  background: #2196F3;
+  color: white;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
+}
+
+.share-option.share-to-chat:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.share-option.share-to-chat:disabled:hover {
+  background: rgba(33, 150, 243, 0.1);
+  color: #333;
+  transform: none;
+  box-shadow: none;
+}
+
+.share-option.share-to-chat:disabled::before {
+  display: none;
+}
+
+.share-icon {
+  font-size: 1.5rem;
+}
+
+.share-preview {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.share-preview h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.preview-content p {
+  margin: 0 0 10px 0;
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.preview-content small {
+  color: #999;
+  font-size: 0.85rem;
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .home-container {
+    padding-top: 0px; /* No top padding for mobile */
+  }
+  
+  .top-nav-header {
+    padding: 12px 15px;
+    margin-bottom: 15px;
+  }
+  
+  .app-logo h1 {
+    font-size: 1.5rem;
+  }
+  
+  .nav-btn {
+    padding: 10px 12px;
+    min-width: 44px;
+    justify-content: center;
+  }
+  
+  .btn-text {
+    display: none;
+  }
+  
+  .nav-btn svg {
+    font-size: 1.2rem;
+  }
+  
+  .feed-section {
+    padding: 15px;
+  }
+  
+  .section-header {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .section-header h2 {
+    font-size: 1.6rem;
+  }
+  
+  /* Post header layout is now consistent across all screen sizes */
+  /* No specific mobile overrides needed for post header */
+  
+  .post-content,
+  .post-actions {
+    padding: 15px;
+  }
+  
+  /* Post header layout is now consistent across all screen sizes */
+  
+  .post-content p {
+    font-size: 1rem;
+  }
+  
+  /* Facebook-style mobile adjustments */
+  .post-stats {
+    padding: 8px 15px;
+    font-size: 0.85rem;
+  }
+  
+  .post-actions.facebook-style {
+    padding: 0 15px 8px;
+  }
+  
+  .post-actions.facebook-style .action-btn {
+    font-size: 0.85rem;
+    padding: 6px 2px;
+    min-height: 32px;
+  }
+  
+  .reactions-popup {
+    left: 15px;
+    bottom: 40px;
+  }
+  
+  .reaction-option {
+    width: 36px;
+    height: 36px;
+    font-size: 1.4rem;
+  }
+
+  .home-header {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .header-left h1 {
+    font-size: 1.6rem;
+  }
+
+  .user-stats {
+    justify-content: center;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  /* Ensure post header layout remains consistent above 768px */
+  .post-header {
+    align-items: center !important;
+    padding: 15px 20px !important;
+  }
+  
+  .user-info {
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  
+  .post-header-right {
+    align-items: center !important;
+    justify-content: flex-end !important;
+  }
+
+  .create-post-btn {
+    align-self: stretch;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-container {
+    padding-top: 0px; /* No top padding for smallest screens */
+  }
+  
+  .top-nav-header {
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  
+  .app-logo h1 {
+    font-size: 1.3rem;
+  }
+  
+  .nav-btn {
+    padding: 8px 10px;
+    min-width: 40px;
+  }
+  
+  .top-nav-buttons {
+    gap: 10px;
+  }
+  
+  .feed-section {
+    padding: 10px;
+  }
+  
+  .section-header {
+    padding: 15px 10px;
+  }
+  
+  .section-header h2 {
+    font-size: 1.4rem;
+  }
+  
+  .create-post-btn,
+  .create-first-post-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+  
+  /* Post header layout is now consistent across all screen sizes */
+  /* No specific mobile overrides needed for post header */
+  
+  .post-content,
+  .post-actions {
+    padding: 12px;
+  }
+}
+
+/* Mobile-specific post card improvements */
+@media (max-width: 768px) {
+  .post-card {
+    margin-bottom: 15px;
+    border-radius: 12px;
+  }
+  
+  /* Post header layout is now consistent across all screen sizes */
+  /* No specific mobile overrides needed for post header */
+  
+  .post-content {
+    padding: 15px;
+  }
+  
+  .post-content p {
+    font-size: 0.95rem;
+  }
+  
+  .post-media {
+    margin-top: 12px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-card {
+    margin-bottom: 12px;
+    border-radius: 10px;
+  }
+  
+  /* Post header layout is now consistent across all screen sizes */
+  /* No specific mobile overrides needed for post header */
+  
+  .post-time {
+    font-size: 0.8rem;
+  }
+  
+  .post-visibility {
+    font-size: 0.7rem;
+    padding: 1px 5px;
+  }
+  
+  .post-content {
+    padding: 12px;
+  }
+  
+  .post-content p {
+    font-size: 0.9rem;
+  }
+  
+  .post-media {
+    margin-top: 10px;
+    gap: 6px;
+  }
+}
+
+/* Touch-friendly improvements for mobile */
+@media (max-width: 768px) {
+  .action-btn {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  .action-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  .reactions-trigger {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  .reactions-trigger:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  .reaction-option {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  .reaction-option:active {
+    transform: scale(0.9);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Improve button spacing for touch */
+  .post-actions.facebook-style {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-btn:active {
+    transform: scale(0.9);
+  }
+  
+  .reaction-option:active {
+    transform: scale(0.85);
+  }
+  
+  /* Ensure minimum touch target size */
+  .action-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Keep buttons in one line on small screens */
+  .post-actions.facebook-style {
+    gap: 2px;
+  }
+}
+
+/* Responsive Share Modal */
+@media (max-width: 768px) {
+  .share-modal {
+    width: 95%;
+    max-height: 85vh;
+    border-radius: 16px;
+  }
+  
+  .share-modal-header {
+    padding: 18px 20px;
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .share-modal-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .share-modal-content {
+    padding: 20px;
+  }
+  
+  .share-options {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .share-option {
+    min-height: 80px;
+    padding: 12px 8px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .share-modal {
+    width: 98%;
+    border-radius: 12px;
+    max-height: 90vh;
+  }
+  
+  .share-modal-header {
+    padding: 15px 18px;
+    border-radius: 12px 12px 0 0;
+  }
+  
+  .share-modal-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .share-modal-content {
+    padding: 18px;
+  }
+  
+  .share-options {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .share-option {
+    padding: 15px 12px;
+    font-size: 0.9rem;
+    min-height: 70px;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  
+  .share-icon {
+    font-size: 1.2rem;
+  }
+  
+  .share-preview {
+    padding: 15px;
+  }
+  
+  .share-preview h4 {
+    font-size: 0.95rem;
+  }
+  
+  .preview-content p {
+    font-size: 0.85rem;
+  }
+  
+  .preview-content small {
+    font-size: 0.8rem;
+  }
+}
+
+/* Responsive Design for Unified Background */
+@media (max-width: 768px) {
+  .unified-background-section {
+    margin: 0 0 15px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .unified-background-section {
+    margin: 0 0 10px 0;
+  }
+}
+
+/* Photo Modal Styles */
+.photo-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.photo-modal {
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: photoModalSlideIn 0.3s ease-out;
+}
+
+@keyframes photoModalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.enlarged-photo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.enlarged-photo:hover {
+  transform: scale(1.02);
+}
+
+/* Make post images clickable */
+.post-media img {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 8px;
+}
+
+.post-media img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile responsiveness for photo modal */
+@media (max-width: 768px) {
+  .photo-modal {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+  
+  .enlarged-photo {
+    border-radius: 4px;
+  }
+  
+  .post-media img {
+    border-radius: 6px;
+  }
+}
