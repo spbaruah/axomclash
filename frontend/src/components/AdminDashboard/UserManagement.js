@@ -17,7 +17,7 @@ const UserManagement = () => {
 
   useEffect(() => {
     filterUsers();
-  }, [users, searchTerm, filterStatus]);
+  }, [users, searchTerm, filterStatus, filterUsers]);
 
   const fetchUsers = async () => {
     try {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaUpload, FaArrowsAlt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaUpload } from 'react-icons/fa';
 import './BannerManagement.css';
 
 const BannerManagement = () => {

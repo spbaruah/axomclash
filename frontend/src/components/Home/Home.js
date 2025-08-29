@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { FaTrophy, FaFire, FaUsers, FaStar, FaBell, FaSearch, FaUser, FaComments, FaComment, FaShare, FaSignOutAlt, FaPlus, FaCrown, FaHeart, FaThumbsUp, FaLaugh, FaEllipsisV } from 'react-icons/fa';
+import { FaUser, FaComments, FaComment, FaShare, FaPlus, FaEllipsisV } from 'react-icons/fa';
 import CreatePost from './CreatePost';
 import PostComments from './PostComments';
 import Banner from './Banner';
@@ -15,14 +15,14 @@ const Home = () => {
   const { userProfile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [collegeRankings, setCollegeRankings] = useState([]);
+  // const [collegeRankings, setCollegeRankings] = useState([]);
 
   const [posts, setPosts] = useState([]);
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userCollegeRank, setUserCollegeRank] = useState(null);
-  const [pointsToNext, setPointsToNext] = useState(0);
+  // const [userCollegeRank, setUserCollegeRank] = useState(null);
+  // const [pointsToNext, setPointsToNext] = useState(0);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
@@ -32,7 +32,7 @@ const Home = () => {
   const [sharingToChat, setSharingToChat] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const [blockedUsers, setBlockedUsers] = useState(new Set());
+  // const [blockedUsers, setBlockedUsers] = useState(new Set());
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostForReport, setSelectedPostForReport] = useState(null);
 
@@ -57,13 +57,13 @@ const Home = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  // const handleLogout = async () => {
+  //   try {
+  //     await signOut();
+  //   } catch (error) {
+  //     console.error('Logout error:', error);
+  //   }
+  // };
 
   const handleUserProfileClick = (userId) => {
     if (userId && userId !== userProfile?.id) {
@@ -79,7 +79,7 @@ const Home = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setBlockedUsers(prev => new Set([...prev, userId]));
+      // setBlockedUsers(prev => new Set([...prev, userId]));
       // Remove posts from blocked user
       setPosts(prevPosts => prevPosts.filter(post => post.user_id !== userId));
       toast.success('User blocked successfully');
@@ -93,7 +93,7 @@ const Home = () => {
     if (userProfile) {
       fetchHomeData();
     }
-  }, [userProfile]);
+  }, [userProfile, fetchHomeData]);
 
   // Check for query parameter to open create post modal
   useEffect(() => {
@@ -165,7 +165,7 @@ const Home = () => {
       
       // Process college rankings
       const rankings = collegesRes.data.colleges || [];
-      setCollegeRankings(rankings);
+      // setCollegeRankings(rankings);
 
 
 
@@ -209,24 +209,24 @@ const Home = () => {
 
 
 
-  const handleQuickAction = (action) => {
-    switch (action) {
-      case 'join-game':
-        window.location.href = '/games';
-        break;
-      case 'college-chat':
-        window.location.href = '/chat';
-        break;
-      case 'challenges':
-        window.location.href = '/challenges';
-        break;
-      case 'leaderboard':
-        window.location.href = '/leaderboard';
-        break;
-      default:
-        break;
-    }
-  };
+  // const handleQuickAction = (action) => {
+  //   switch (action) {
+  //     case 'join-game':
+  //       window.location.href = '/games';
+  //       break;
+  //     case 'college-chat':
+  //       window.location.href = '/chat';
+  //       break;
+  //     case 'challenges':
+  //       window.location.href = '/challenges';
+  //       break;
+  //     case 'leaderboard':
+  //       window.location.href = '/leaderboard';
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // };
 
   const handleCreatePost = () => {
     setShowCreatePost(true);

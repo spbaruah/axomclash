@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaEdit, FaTrophy, FaUsers, FaCalendar, FaMapMarkerAlt, FaBuilding, FaSignOutAlt, FaSave, FaTimes, FaStar, FaFire, FaMedal, FaCrown, FaCamera, FaHeart, FaComment, FaShare, FaBookmark, FaBan, FaArrowLeft } from 'react-icons/fa';
+import { FaUser, FaEdit, FaTrophy, FaUsers, FaCalendar, FaMapMarkerAlt, FaSignOutAlt, FaSave, FaTimes, FaCamera, FaHeart, FaComment, FaShare, FaBookmark, FaBan, FaArrowLeft } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -39,7 +39,7 @@ const Profile = () => {
     } else {
       console.log('No user profile ID found');
     }
-  }, [userProfile?.id]);
+  }, [userProfile?.id, fetchUserPosts, fetchSavedPosts, fetchBlockedUsers]);
 
   const fetchUserPosts = async () => {
     try {

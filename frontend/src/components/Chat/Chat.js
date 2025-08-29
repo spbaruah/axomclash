@@ -15,7 +15,7 @@ const Chat = () => {
   const [typingUsers, setTypingUsers] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMediaOptions, setShowMediaOptions] = useState(false);
-  const [activeChat, setActiveChat] = useState('college'); // For future individual chats
+  // const [activeChat, setActiveChat] = useState('college'); // For future individual chats
   const [onlineUsersLoading, setOnlineUsersLoading] = useState(true);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -90,7 +90,7 @@ const Chat = () => {
       // Mark user as online when chat loads
       updateOnlineStatus(true);
     }
-  }, [user?.college_id]);
+  }, [user?.college_id, fetchMessages, fetchOnlineUsers, updateOnlineStatus]);
 
   // Cleanup when component unmounts
   useEffect(() => {
@@ -104,7 +104,7 @@ const Chat = () => {
         clearTimeout(longPressTimeout);
       }
     };
-  }, [user?.college_id, longPressTimeout]);
+  }, [user?.college_id, longPressTimeout, updateOnlineStatus]);
 
   // Keep online status fresh while user is active
   useEffect(() => {
@@ -118,7 +118,7 @@ const Chat = () => {
         updateOnlineStatus(false);
       };
     }
-  }, [user?.college_id]);
+  }, [user?.college_id, updateOnlineStatus]);
 
   // Fetch chat messages
   const fetchMessages = async () => {
@@ -706,7 +706,7 @@ const Chat = () => {
           <div className="message-media">
             <img 
               src={message.media_url} 
-              alt="Photo" 
+              alt="" 
               className="message-photo"
               onError={(e) => {
                 e.target.style.display = 'none';
@@ -969,7 +969,7 @@ const Chat = () => {
                       <div className="reply-content">
                         {message.reply_message_type === 'photo' ? (
                           <div className="reply-media">
-                            <img src={message.reply_media_url} alt="Photo" />
+                            <img src={message.reply_media_url} alt="" />
                             {message.reply_content && <span>{message.reply_content}</span>}
                           </div>
                         ) : message.reply_message_type === 'video' ? (
@@ -1147,7 +1147,7 @@ const Chat = () => {
                    <div className="reply-content">
                      {replyingTo.message_type === 'photo' ? (
                        <div className="reply-media">
-                         <img src={replyingTo.media_url} alt="Photo" />
+                         <img src={replyingTo.media_url} alt="" />
                          {replyingTo.content && <span>{replyingTo.content}</span>}
                        </div>
                      ) : replyingTo.message_type === 'video' ? (

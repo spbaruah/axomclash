@@ -21,7 +21,7 @@ const PostComments = ({ postId, isOpen, onClose, onCommentAdded }) => {
     if (isOpen && postId) {
       fetchComments();
     }
-  }, [isOpen, postId]);
+  }, [isOpen, postId, fetchComments]);
 
   const fetchComments = async () => {
     try {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -32,48 +32,47 @@ const router = {
   }
 };
 
-// Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-  
-  // Check user status once
-  const userStatus = user;
-  if (!userStatus) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return children;
-};
+// Protected Route Component - Currently unused but kept for future use
+// const ProtectedRoute = ({ children }) => {
+//   const { user, loading } = useAuth();
+//   
+//   if (loading) {
+//     return <LoadingSpinner />;
+//   }
+//   
+//   // Check user status once
+//   const userStatus = user;
+//   if (!userStatus) {
+//   return <Navigate to="/login" replace />;
+//   }
+//   
+//   return children;
+// };
 
-// Admin Route Component
-const AdminRoute = ({ children }) => {
-  const { loading } = useAuth();
-  
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-  
-  // Admin authentication is already checked at AppContent level
-  // This is just a fallback for direct navigation
-  const adminToken = localStorage.getItem('adminToken');
-  const adminData = localStorage.getItem('adminData');
-  
-  if (!adminToken || !adminData) {
-    return <Navigate to="/" replace />;
-  }
-  
-  return children;
-};
+// Admin Route Component - Currently unused but kept for future use
+// const AdminRoute = ({ children }) => {
+//   const { loading } = useAuth();
+//   
+//   if (loading) {
+//   return <LoadingSpinner />;
+//   }
+//   
+//   // Admin authentication is already checked at AppContent level
+//   // This is just a fallback for direct navigation
+//   const adminToken = localStorage.getItem('adminToken');
+//   const adminData = localStorage.getItem('adminData');
+//   
+//   if (!adminToken || !adminData) {
+//     return <Navigate to="/" replace />;
+//   }
+//   
+//   return children;
+// };
 
 // Main App Component
 const AppContent = () => {
   const { user, loading, isAdmin } = useAuth();
   const [authChecked, setAuthChecked] = useState(false);
-  const location = useLocation();
   
   useEffect(() => {
     const timer = setTimeout(() => {

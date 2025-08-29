@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaSearch, FaMapMarkerAlt, FaTrophy, FaUsers, FaArrowLeft, FaArrowRight, FaGraduationCap } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
 const CollegeSelection = ({ onCollegeSelect, colleges, onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');

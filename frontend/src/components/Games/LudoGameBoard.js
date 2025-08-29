@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaDice, FaPlay, FaRedo, FaHome, FaFlag, FaCrown } from 'react-icons/fa';
 import { useSocket } from '../../contexts/SocketContext';
@@ -8,15 +8,15 @@ import './LudoGameBoard.css';
 
 const LudoGameBoard = ({ gameRoom, currentPlayer, onGameAction }) => {
   // Game constants
-  const PLAYER_COLORS = ['#FF5252', '#4CAF50', '#2196F3', '#FFC107'];
+  const PLAYER_COLORS = useMemo(() => ['#FF5252', '#4CAF50', '#2196F3', '#FFC107'], []);
   const PLAYER_NAMES = ['Red', 'Green', 'Blue', 'Yellow'];
-  const START_POSITIONS = [0, 13, 26, 39];
-  const FINISH_PATHS = {
-    0: [52, 53, 54, 55, 56],
-    1: [57, 58, 59, 60, 61],
-    2: [62, 63, 64, 65, 66],
-    3: [67, 68, 69, 70, 71]
-  };
+  const START_POSITIONS = useMemo(() => [0, 13, 26, 39], []);
+  // const FINISH_PATHS = {
+  //   0: [52, 53, 54, 55, 56],
+  //   1: [57, 58, 59, 60, 61],
+  //   2: [62, 63, 64, 65, 66],
+  //   3: [67, 68, 69, 70, 71]
+  // };
 
   // Initialize game board
   const initializeBoard = useCallback(() => {
@@ -70,7 +70,7 @@ const LudoGameBoard = ({ gameRoom, currentPlayer, onGameAction }) => {
 
   const [board, setBoard] = useState(initializeBoard());
   const [diceValue, setDiceValue] = useState(0);
-  const [selectedPiece, setSelectedPiece] = useState(null);
+  // const [selectedPiece, setSelectedPiece] = useState(null);
   const [gameState, setGameState] = useState('waiting');
   const [currentTurn, setCurrentTurn] = useState(0);
   const [pieces, setPieces] = useState(initializePieces());
@@ -141,104 +141,104 @@ const LudoGameBoard = ({ gameRoom, currentPlayer, onGameAction }) => {
     return false;
   }, [START_POSITIONS]);
 
-  // Calculate new position for a piece
-  const calculateNewPosition = useCallback((piece, diceVal) => {
-    if (piece.isHome && diceVal === 6) {
-      return {
-        position: 'path',
-        pathPosition: START_POSITIONS[piece.player],
-        isHome: false
-      };
-    }
-    
-    if (piece.position === 'path') {
-      const currentPos = piece.pathPosition;
-      const playerId = piece.player;
-      const startPos = START_POSITIONS[playerId];
-      
-      // Calculate distance from start
-      let distanceFromStart = 0;
-      if (currentPos >= startPos) {
-        distanceFromStart = currentPos - startPos;
-      } else {
-        distanceFromStart = 52 - startPos + currentPos;
-      }
-      
-      const newDistance = distanceFromStart + diceVal;
-      
-      // Check if piece can enter finish path
-      if (newDistance > 50) {
-        const finishPathPos = newDistance - 51;
-        if (finishPathPos <= 5) {
-          return {
-            position: 'finish',
-            pathPosition: 52 + (playerId * 5) + finishPathPos - 1,
-            isHome: false
-          };
-        }
-      }
-      
-      // Regular move on main path
-      const newPos = (currentPos + diceVal) % 52;
-      return {
-        position: 'path',
-        pathPosition: newPos,
-        isHome: false
-      };
-    }
-    
-    if (piece.position === 'finish') {
-      const currentFinishPos = piece.pathPosition - 52 - (piece.player * 5);
-      const newFinishPos = currentFinishPos + diceVal;
-      
-      if (newFinishPos === 5) {
-        return {
-          position: 'finished',
-          pathPosition: -1,
-          isFinished: true,
-          isHome: false
-        };
-      }
-      
-      if (newFinishPos < 5) {
-        return {
-          position: 'finish',
-          pathPosition: 52 + (piece.player * 5) + newFinishPos,
-          isHome: false
-        };
-      }
-    }
-    
-    return null;
-  }, [START_POSITIONS]);
+  // Calculate new position for a piece - Currently unused
+  // const calculateNewPosition = useCallback((piece, diceVal) => {
+  //   if (piece.isHome && diceVal === 6) {
+  //     return {
+  //       position: 'path',
+  //       pathPosition: START_POSITIONS[piece.player],
+  //       isHome: false
+  //     };
+  //   }
+  //   
+  //   if (piece.position === 'path') {
+  //     const currentPos = piece.pathPosition;
+  //     const playerId = piece.player;
+  //     const startPos = START_POSITIONS[playerId];
+  //   
+  //     // Calculate distance from start
+  //     let distanceFromStart = 0;
+  //     if (currentPos >= startPos) {
+  //       distanceFromStart = currentPos - startPos;
+  //     } else {
+  //       distanceFromStart = 52 - startPos + currentPos;
+  //     }
+  //   
+  //     const newDistance = distanceFromStart + diceVal;
+  //   
+  //     // Check if piece can enter finish path
+  //     if (newDistance > 50) {
+  //       const finishPathPos = newDistance - 51;
+  //       if (finishPathPos <= 5) {
+  //         return {
+  //           position: 'finish',
+  //           pathPosition: 52 + (playerId * 5) + finishPathPos - 1,
+  //           isHome: false
+  //         };
+  //       }
+  //     }
+  //   
+  //     // Regular move on main path
+  //     const newPos = (currentPos + diceVal) % 52;
+  //     return {
+  //       position: 'path',
+  //       pathPosition: newPos,
+  //       isHome: false
+  //     };
+  //   }
+  //   
+  //   if (piece.position === 'finish') {
+  //     const currentFinishPos = piece.pathPosition - 52 - (piece.player * 5);
+  //     const newFinishPos = currentFinishPos + diceVal;
+  //   
+  //     if (newFinishPos === 5) {
+  //       return {
+  //         position: 'finished',
+  //         pathPosition: -1,
+  //         isFinished: true,
+  //         isHome: false
+  //       };
+  //     }
+  //   
+  //     if (newFinishPos < 5) {
+  //       return {
+  //         position: 'finish',
+  //         pathPosition: 52 + (piece.player * 5) + newFinishPos,
+  //         isHome: false
+  //         };
+  //     }
+  //   }
+  //   
+  //   return null;
+  // }, [START_POSITIONS]);
 
-  // Check for captures
-  const checkCapture = useCallback((newPosition, movingPiece, currentPieces) => {
-    if (newPosition < 52 && !board[newPosition].isSafe) {
-      const capturedPieces = currentPieces.filter(p => 
-        p.pathPosition === newPosition && 
-        p.player !== movingPiece.player &&
-        p.position === 'path'
-      );
-      
-      if (capturedPieces.length > 0) {
-        // Send captured pieces back home
-        return currentPieces.map(piece => {
-          if (capturedPieces.some(cp => cp.id === piece.id)) {
-            return {
-              ...piece,
-              position: 'home',
-              pathPosition: -1,
-              isHome: true
-            };
-          }
-          return piece;
-        });
-      }
-    }
-    
-    return currentPieces;
-  }, [board]);
+  // Check for captures - Currently unused
+  // const checkCapture = useCallback((newPosition, movingPiece, currentPieces) => {
+  //   if (newPosition < 52 && !board[newPosition].isSafe) {
+  //     const capturedPieces = currentPieces.filter(p => 
+  //       p.pathPosition === newPosition && 
+  //       p.player !== movingPiece.player &&
+  //       p.position === 'path'
+  //     );
+  //   
+  //     if (capturedPieces.length > 0) {
+  //       // Send captured pieces back home
+  //       return currentPieces.map(piece => {
+  //         if (capturedPieces.some(cp => cp.id === piece.id)) {
+  //           return {
+  //             ...piece,
+  //             position: 'home',
+  //             pathPosition: -1,
+  //             isHome: true
+  //           };
+  //         }
+  //         return piece;
+  //       });
+  //     }
+  //   }
+  //   
+  //   return currentPieces;
+  // }, [board]);
 
   // Socket event handlers
   const handleDiceRolled = useCallback((data) => {
@@ -385,7 +385,7 @@ const LudoGameBoard = ({ gameRoom, currentPlayer, onGameAction }) => {
     if (gameState !== 'playing' || !isMyTurn || diceValue === 0) return;
     
     if (validMoves.includes(piece.id) && canMovePiece(piece, diceValue)) {
-      setSelectedPiece(piece);
+      // setSelectedPiece(piece);
       movePiece(piece, diceValue);
     } else {
       toast.error('This piece cannot move with the current dice value.');
@@ -404,7 +404,7 @@ const LudoGameBoard = ({ gameRoom, currentPlayer, onGameAction }) => {
     }
     
     // Reset selection
-    setSelectedPiece(null);
+    // setSelectedPiece(null);
   };
 
   // Reset game

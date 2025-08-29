@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaUser, FaTrophy, FaUsers, FaCalendar, FaMapMarkerAlt, FaBuilding, FaArrowLeft, FaHeart, FaComment, FaShare, FaEllipsisV } from 'react-icons/fa';
+import { FaUser, FaTrophy, FaUsers, FaCalendar, FaArrowLeft, FaHeart, FaComment, FaShare, FaEllipsisV } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -40,7 +40,7 @@ const UserProfile = () => {
       fetchUserPosts();
       checkBlockStatus();
     }
-  }, [userId]);
+  }, [userId, fetchUserProfile, fetchUserPosts, checkBlockStatus]);
 
   // Check block status between current user and profile user
   const checkBlockStatus = async () => {
@@ -507,7 +507,7 @@ const UserProfile = () => {
           <img src={user.cover_photo} alt="Cover" className="user-cover-photo" />
         ) : (
           <div className="user-default-cover">
-            <FaBuilding />
+            {/* <FaBuilding /> */}
           </div>
         )}
         
@@ -547,7 +547,7 @@ const UserProfile = () => {
             {/* College Info */}
             {user.college_name && (
               <div className="user-college-info">
-                <FaBuilding />
+                {/* <FaBuilding /> */}
                 <span>{user.college_name}</span>
               </div>
             )}

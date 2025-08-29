@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaGamepad, FaUsers, FaTrophy, FaPlay, FaClock, FaStar, FaDice, FaBrain, FaCrown, FaUserFriends, FaSpinner, FaTimes } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { FaGamepad, FaUsers, FaPlay, FaClock, FaStar, FaDice, FaBrain, FaSpinner, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import toast from 'react-hot-toast';
@@ -14,15 +14,15 @@ const Games = () => {
   const [selectedGame, setSelectedGame] = useState(null);
   const [gameRoom, setGameRoom] = useState(null);
   const [availableGames, setAvailableGames] = useState([]);
-  const [activeGames, setActiveGames] = useState([]);
-  const [completedGames, setCompletedGames] = useState([]);
+  // const [activeGames, setActiveGames] = useState([]);
+  // const [completedGames, setCompletedGames] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [gameState, setGameState] = useState(null);
+  // const [gameState, setGameState] = useState(null);
   const [joiningGame, setJoiningGame] = useState(false);
   const [waitingPlayers, setWaitingPlayers] = useState([]);
   
   const { userProfile } = useAuth();
-  const { socket, joinGameRoom, leaveGameRoom, updateGameState } = useSocket();
+  const { socket } = useSocket();
 
   // Game configurations
   const gameTypes = [
@@ -79,8 +79,8 @@ const Games = () => {
   useEffect(() => {
     fetchGames();
     if (socket) {
-      socket.on('gameUpdate', handleGameUpdate);
-      socket.on('gameStart', handleGameStart);
+      // socket.on('gameUpdate', handleGameUpdate);
+      // socket.on('gameStart', handleGameStart);
       socket.on('gameEnd', handleGameEnd);
       socket.on('playerJoined', handlePlayerJoined);
       socket.on('roomCreated', handleRoomCreated);
@@ -89,15 +89,15 @@ const Games = () => {
 
     return () => {
       if (socket) {
-        socket.off('gameUpdate');
-        socket.off('gameStart');
+        // socket.off('gameUpdate');
+        // socket.off('gameStart');
         socket.off('gameEnd');
         socket.off('playerJoined');
         socket.off('roomCreated');
         socket.off('waitingForPlayers');
       }
     };
-  }, [socket]);
+  }, [socket, handleGameEnd]);
 
   const fetchGames = async () => {
     try {
@@ -113,18 +113,18 @@ const Games = () => {
     }
   };
 
-  const handleGameUpdate = (data) => {
-    setGameState(data);
-    toast.success('Game updated!');
-  };
+  // const handleGameUpdate = (data) => {
+  //   setGameState(data);
+  //   toast.success('Game updated!');
+  // };
 
-  const handleGameStart = (data) => {
-    setGameState(data);
-    toast.success('Game started!');
-  };
+  // const handleGameStart = (data) => {
+  //   setGameState(data);
+  //   toast.success('Game started!');
+  // };
 
   const handleGameEnd = (data) => {
-    setGameState(data);
+    // setGameState(data);
     toast.success('Game ended!');
     fetchGames(); // Refresh games list
   };
@@ -173,39 +173,39 @@ const Games = () => {
     }
   };
 
-  // Create game for non-auto games
-  const createGame = async (gameType) => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/games', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify({
-          name: `${gameType.name} - ${userProfile.college_name}`,
-          type: gameType.id,
-          college2_id: null, // Will be set when opponent joins
-          max_players: gameType.players,
-          points_at_stake: gameType.reward
-        })
-      });
+  // Create game for non-auto games - Currently unused
+  // const createGame = async (gameType) => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await fetch('/api/games', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+  //       },
+  //       body: JSON.stringify({
+  //         name: `${gameType.name} - ${userProfile.college_name}`,
+  //         type: gameType.id,
+  //         college2_id: null, // Will be set when opponent joins
+  //         max_players: gameType.players,
+  //         points_at_stake: gameType.reward
+  //       })
+  //     });
 
-      if (response.ok) {
-        const data = await response.json();
-        toast.success('Game created! Waiting for opponents...');
-        fetchGames();
-      } else {
-        toast.error('Failed to create game');
-      }
-    } catch (error) {
-      console.error('Error creating game:', error);
-      toast.error('Failed to create game');
-    } finally {
-      setLoading(false);
-    }
-  };
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   toast.success('Game created! Waiting for opponents...');
+      //   fetchGames();
+      // } else {
+      //   toast.error('Failed to create game');
+      // }
+      // } catch (error) {
+      //   console.error('Error creating game:', error);
+      //   toast.error('Failed to create game');
+      // } finally {
+      //   setLoading(false);
+      // }
+    // };
 
   const joinGame = async (gameId) => {
     try {
@@ -436,417 +436,417 @@ const Games = () => {
   );
 };
 
-// Ludo Game Component
-const LudoGame = ({ gameType, onBack }) => {
-  const [gameState, setGameState] = useState('waiting'); // waiting, playing, finished
-  const [currentPlayer, setCurrentPlayer] = useState(0);
-  const [diceValue, setDiceValue] = useState(0);
-  const [isRolling, setIsRolling] = useState(false);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [selectedPiece, setSelectedPiece] = useState(null);
-  const [canRoll, setCanRoll] = useState(true);
-  const [winner, setWinner] = useState(null);
+// Ludo Game Component - Currently unused
+// const LudoGame = ({ gameType, onBack }) => {
+//   const [gameState, setGameState] = useState('waiting'); // waiting, playing, finished
+//   const [currentPlayer, setCurrentPlayer] = useState(0);
+//   const [diceValue, setDiceValue] = useState(0);
+//   const [isRolling, setIsRolling] = useState(false);
+//   // const [gameStarted, setGameStarted] = useState(false);
+//   // const [selectedPiece, setSelectedPiece] = useState(null);
+//   const [canRoll, setCanRoll] = useState(true);
+//   const [winner, setWinner] = useState(null);
   
   // College vs College players
-  const [players, setPlayers] = useState([
-    { 
-      id: 0, 
-      name: 'Rahul Sharma', 
-      college: 'IIT Guwahati', 
-      color: '#FF6B6B', 
-      pieces: [
-        { id: 0, position: 'home', steps: 0, isHome: true, isFinished: false },
-        { id: 1, position: 'home', steps: 0, isHome: true, isFinished: false },
-        { id: 2, position: 'home', steps: 0, isHome: true, isFinished: false },
-        { id: 3, position: 'home', steps: 0, isHome: true, isFinished: false }
-      ],
-      avatar: '👨‍🎓',
-      score: 0
-    },
-    { 
-      id: 1, 
-      name: 'Priya Patel', 
-      college: 'Gauhati University', 
-      color: '#4ECDC4', 
-      pieces: [
-        { id: 0, position: 'home', steps: 0, isHome: true, isFinished: false },
-        { id: 1, position: 'home', steps: 0, isHome: true, isFinished: false },
-        { id: 2, position: 'home', steps: 0, isHome: true, isFinished: false },
-        { id: 3, position: 'home', steps: 0, isHome: true, isFinished: false }
-      ],
-      avatar: '👩‍🎓',
-      score: 0
-    }
-  ]);
+  // const [players, setPlayers] = useState([
+  //   { 
+  //     id: 0, 
+  //     name: 'Rahul Sharma', 
+  //     college: 'IIT Guwahati', 
+  //     color: '#FF6B6B', 
+  //     pieces: [
+  //       { id: 0, position: 'home', steps: 0, isHome: true, isFinished: false },
+  //       { id: 1, position: 'home', steps: 0, isHome: true, isFinished: false },
+  //       { id: 2, position: 'home', steps: 0, isHome: true, isFinished: false },
+  //       { id: 3, position: 'home', steps: 0, isHome: true, isFinished: false }
+  //     ],
+  //     avatar: '👨‍🎓',
+  //     score: 0
+  //   },
+  //   { 
+  //     id: 1, 
+  //     name: 'Priya Patel', 
+  //     college: 'Gauhati University', 
+  //     color: '#4ECDC4', 
+  //     pieces: [
+  //       { id: 0, position: 'home', steps: 0, isHome: true, isFinished: false },
+  //       { id: 1, position: 'home', steps: 0, isHome: true, isFinished: false },
+  //       { id: 2, position: 'home', steps: 0, isHome: true, isFinished: false },
+  //       { id: 3, position: 'home', steps: 0, isHome: true, isFinished: false }
+  //     ],
+  //     avatar: '👩‍🎓',
+  //     score: 0
+  //   }
+  // ]);
 
   // Ludo board paths and positions
-  const safeSpots = [0, 8, 13, 21, 26, 34, 39, 47];
+  // const safeSpots = [0, 8, 13, 21, 26, 34, 39, 47];
   
-  function initializeLudoPaths() {
-    // Create the classic Ludo board path (52 positions)
-    const paths = [];
-    for (let i = 0; i < 52; i++) {
-      paths.push({
-        position: i,
-        pieces: [],
-        isSafe: safeSpots.includes(i),
-        color: null
-      });
-    }
-    return paths;
-  }
+  // function initializeLudoPaths() {
+  //   // Create the classic Ludo board path (52 positions)
+  //   const paths = [];
+  //   for (let i = 0; i < 52; i++) {
+  //     paths.push({
+  //       position: i,
+  //       pieces: [],
+  //       isSafe: safeSpots.includes(i),
+  //       color: null
+  //     });
+  //   }
+  //   return paths;
+  // }
   
-  const [boardPaths, setBoardPaths] = useState(initializeLudoPaths());
-  const [safeSpotsState, setSafeSpotsState] = useState(safeSpots);
+  // const [boardPaths, setBoardPaths] = useState(initializeLudoPaths());
+  // const [safeSpotsState, setSafeSpotsState] = useState(safeSpots);
 
-  const rollDice = async () => {
-    if (!canRoll || isRolling) return;
-    
-    setIsRolling(true);
-    setCanRoll(false);
-    
-    // Animate dice roll
-    for (let i = 0; i < 10; i++) {
-      const tempValue = Math.floor(Math.random() * 6) + 1;
-      setDiceValue(tempValue);
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    
-    const finalValue = Math.floor(Math.random() * 6) + 1;
-    setDiceValue(finalValue);
-    
-    setIsRolling(false);
-    
-    // Check if player can move any piece
-    const canMove = checkIfCanMove(finalValue);
-    if (!canMove) {
-      toast("No valid moves available. Turn passed to next player.");
-      nextTurn();
-    } else {
-      toast.success(`Dice rolled: ${finalValue}! Select a piece to move.`);
-    }
-  };
+  // const rollDice = async () => {
+  //   if (!canRoll || isRolling) return;
+  //   
+  //   setIsRolling(true);
+  //   setCanRoll(false);
+  //   
+  //   // Animate dice roll
+  //   for (let i = 0; i < 10; i++) {
+  //     const tempValue = Math.floor(Math.random() * 6) + 1;
+  //     setDiceValue(tempValue);
+  //     await new Promise(resolve => setTimeout(resolve, 100));
+  //   }
+  //   
+  //   const finalValue = Math.floor(Math.random() * 6) + 1;
+  //   setDiceValue(finalValue);
+  //   
+  //   setIsRolling(false);
+  //   
+  //   // Check if player can move any piece
+  //   const canMove = checkIfCanMove(finalValue);
+  //   if (!canMove) {
+  //     toast("No valid moves available. Turn passed to next player.");
+  //     nextTurn();
+  //   } else {
+  //     toast.success(`Dice rolled: ${finalValue}! Select a piece to move.`);
+  //   }
+  // };
 
-  const checkIfCanMove = (diceValue) => {
-    const currentPlayerPieces = players[currentPlayer].pieces;
-    
-    // Check if any piece can be moved out of home
-    if (diceValue === 6) {
-      const homePieces = currentPlayerPieces.filter(p => p.isHome);
-      if (homePieces.length > 0) return true;
-    }
-    
-    // Check if any piece on board can move
-    const boardPieces = currentPlayerPieces.filter(p => !p.isHome && !p.isFinished);
-    if (boardPieces.length > 0) return true;
-    
-    return false;
-  };
+  // const checkIfCanMove = (diceValue) => {
+  //   const currentPlayerPieces = players[currentPlayer].pieces;
+  //   
+  //   // Check if any piece can be moved out of home
+  //   if (diceValue === 6) {
+  //     const homePieces = currentPlayerPieces.filter(p => p.isHome);
+  //     if (homePieces.length > 0) return true;
+  //   }
+  //   
+  //   // Check if any piece on board can move
+  //   const boardPieces = currentPlayerPieces.filter(p => !p.isHome && !p.isFinished);
+  //   if (boardPieces.length > 0) return true;
+  //   
+  //   return false;
+  // };
 
-  const selectPiece = (pieceId) => {
-    if (!canRoll && !isRolling) {
-      setSelectedPiece(pieceId);
-      movePiece(pieceId);
-    }
-  };
+  // const selectPiece = (pieceId) => {
+  //   if (!canRoll && !isRolling) {
+  //     setSelectedPiece(pieceId);
+  //     movePiece(pieceId);
+  //   }
+  // };
 
-  const movePiece = (pieceId) => {
-    const piece = players[currentPlayer].pieces.find(p => p.id === pieceId);
-    if (!piece) return;
+  // const movePiece = (pieceId) => {
+  //   const piece = players[currentPlayer].pieces.find(p => p.id === pieceId);
+  //   if (!piece) return;
 
-    let newPosition = piece.position;
-    let newSteps = piece.steps;
+  //   let newPosition = piece.position;
+  //   let newSteps = piece.steps;
 
-    if (piece.isHome && diceValue === 6) {
-      // Move out of home
-      newPosition = 'board';
-      newSteps = 0;
-      piece.isHome = false;
-    } else if (!piece.isHome) {
-      // Move on board
-      newSteps += diceValue;
-      if (newSteps >= 57) {
-        // Piece finished
-        piece.isFinished = true;
-        piece.position = 'finished';
-        checkWinner();
-      } else {
-        newPosition = 'board';
-      }
-    }
+  //   if (piece.isHome && diceValue === 6) {
+  //     // Move out of home
+  //     newPosition = 'board';
+  //     newSteps = 0;
+  //     piece.isHome = false;
+  //   } else if (!piece.isHome) {
+  //     // Move on board
+  //     newSteps += diceValue;
+  //     if (newSteps >= 57) {
+  //       // Piece finished
+  //       piece.isFinished = true;
+  //       piece.position = 'finished';
+  //       checkWinner();
+  //     } else {
+  //       newPosition = 'board';
+  //     }
+  //   }
 
-    // Update piece
-    const updatedPlayers = [...players];
-    const playerIndex = updatedPlayers.findIndex(p => p.id === currentPlayer);
-    const pieceIndex = updatedPlayers[playerIndex].pieces.findIndex(p => p.id === pieceId);
-    
-    updatedPlayers[playerIndex].pieces[pieceIndex] = {
-      ...piece,
-      position: newPosition,
-      steps: newSteps
-    };
+  //   // Update piece
+  //   const updatedPlayers = [...players];
+  //   const playerIndex = updatedPlayers.findIndex(p => p.id === currentPlayer);
+  //   const pieceIndex = updatedPlayers[playerIndex].pieces.findIndex(p => p.id === pieceId);
+  //   
+  //   updatedPlayers[playerIndex].pieces[index] = {
+  //     ...piece,
+  //     position: newPosition,
+  //     steps: newSteps
+  //   };
 
-    setPlayers(updatedPlayers);
-    setSelectedPiece(null);
-    
-    // Check for special moves (capturing, safe spots)
-    handleSpecialMoves(piece, newSteps);
-    
-    // Next turn (unless rolled 6)
-    if (diceValue !== 6) {
-      nextTurn();
-    } else {
-      setCanRoll(true);
-      toast.success("You rolled a 6! Roll again!");
-    }
-  };
+  //   setPlayers(updatedPlayers);
+  //   setSelectedPiece(null);
+  //   
+  //   // Check for special moves (capturing, safe spots)
+  //   handleSpecialMoves(piece, newSteps);
+  //   
+  //   // Next turn (unless rolled 6)
+  //   if (diceValue !== 6) {
+  //     nextTurn();
+  //     } else {
+  //       setCanRoll(true);
+  //       toast.success("You rolled a 6! Roll again!");
+  //     }
+  //   };
 
-  const handleSpecialMoves = (piece, newSteps) => {
-    // Check if piece landed on opponent piece (capture)
-    const opponentPieces = players.filter(p => p.id !== currentPlayer).flatMap(p => p.pieces);
-    const opponentOnPosition = opponentPieces.find(p => !p.isHome && p.steps === newSteps);
-    
-    if (opponentOnPosition && !safeSpots.includes(newSteps)) {
-      // Capture opponent piece
-      opponentOnPosition.position = 'home';
-      opponentOnPosition.steps = 0;
-      opponentOnPosition.isHome = true;
-      opponentOnPosition.isFinished = false;
-      
-      toast.success(`🎯 Captured opponent's piece!`);
-      
-      // Award points
-      const updatedPlayers = [...players];
-      const playerIndex = updatedPlayers.findIndex(p => p.id === currentPlayer);
-      updatedPlayers[playerIndex].score += 10;
-      setPlayers(updatedPlayers);
-    }
-  };
+  // const handleSpecialMoves = (piece, newSteps) => {
+  //   // Check if piece landed on opponent piece (capture)
+  //   const opponentPieces = players.filter(p => p.id !== currentPlayer).flatMap(p => p.pieces);
+  //   const opponentOnPosition = opponentPieces.find(p => !p.isHome && p.steps === newSteps);
+  //   
+  //   if (opponentOnPosition && !safeSpots.includes(newSteps)) {
+  //     // Capture opponent piece
+  //     opponentOnPosition.position = 'home';
+  //     opponentOnPosition.steps = 0;
+  //     opponentOnPosition.isHome = true;
+  //     opponentOnPosition.isFinished = false;
+  //   
+  //     toast.success(`🎯 Captured opponent's piece!`);
+  //   
+  //     // Award points
+  //     const updatedPlayers = [...players];
+  //     const playerIndex = updatedPlayers.findIndex(p => p.id === currentPlayer);
+  //     updatedPlayers[playerIndex].score += 10;
+  //     setPlayers(updatedPlayers);
+  //   }
+  // };
 
-  const nextTurn = () => {
-    setCurrentPlayer((prev) => (prev + 1) % players.length);
-    setCanRoll(true);
-    setDiceValue(0);
-  };
+  // const nextTurn = () => {
+  //   setCurrentPlayer((prev) => (prev + 1) % players.length);
+  //   setCanRoll(true);
+  //   setDiceValue(0);
+  // };
 
-  const checkWinner = () => {
-    const currentPlayerPieces = players[currentPlayer].pieces;
-    const finishedPieces = currentPlayerPieces.filter(p => p.isFinished);
-    
-    if (finishedPieces.length === 4) {
-      setWinner(currentPlayer);
-      setGameState('finished');
-      toast.success(`🎉 ${players[currentPlayer].name} from ${players[currentPlayer].college} wins!`);
-    }
-  };
+  // const checkWinner = () => {
+  //   const currentPlayerPieces = players[currentPlayer].pieces;
+  //   const finishedPieces = currentPlayerPieces.filter(p => p.isFinished);
+  //   
+  //   if (finishedPieces.length === 4) {
+  //     setWinner(currentPlayer);
+  //     setGameState('finished');
+  //     toast.success(`🎉 ${players[currentPlayer].name} from ${players[currentPlayer].college} wins!`);
+  //   }
+  // };
 
-  const startGame = () => {
-    setGameStarted(true);
-    setGameState('playing');
-    toast.success('🎮 Ludo Battle started! College vs College!');
-  };
+  // const startGame = () => {
+  //   setGameStarted(true);
+  //   setGameState('playing');
+  //   toast.success('🎮 Ludo Battle started! College vs College!');
+  // };
 
-  const renderDice = () => (
-    <div className={`dice ${isRolling ? 'rolling' : ''}`}>
-      <div className="dice-inner">
-        {diceValue > 0 && (
-          <div className="dice-dots">
-            {[...Array(diceValue)].map((_, i) => (
-              <div key={i} className="dice-dot" />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  // const renderDice = () => (
+  //   <div className={`dice ${isRolling ? 'rolling' : ''}`}>
+  //     <div className="dice-inner">
+  //       {diceValue > 0 && (
+  //         <div className="dice-dots">
+  //           {[...Array(diceValue)].map((_, i) => (
+  //             <div key={i} className="dice-dot" />
+  //           ))}
+  //         </div>
+  //       )}
+  //     </div>
+  //   </div>
+  // );
 
-  const renderPlayerProfile = (player, isCurrentTurn) => (
-    <div className={`player-profile ${isCurrentTurn ? 'current-turn' : ''}`}>
-      <div className="player-avatar">{player.avatar}</div>
-      <div className="player-info">
-        <h4>{player.name}</h4>
-        <p className="college-name">{player.college}</p>
-        <p className="player-score">Score: {player.score}</p>
-      </div>
-      <div className="player-pieces-status">
-        {player.pieces.map((piece, idx) => (
-          <div 
-            key={idx}
-            className={`piece-status ${piece.isFinished ? 'finished' : piece.isHome ? 'home' : 'board'}`}
-            style={{ backgroundColor: player.color }}
-            onClick={() => selectPiece(piece.id)}
-          />
-        ))}
-      </div>
-    </div>
-  );
+  // const renderPlayerProfile = (player, isCurrentTurn) => (
+  //   <div className={`player-profile ${isCurrentTurn ? 'current-turn' : ''}`}>
+  //     <div className="player-avatar">{player.avatar}</div>
+  //     <div className="player-info">
+  //       <h4>{player.name}</h4>
+  //       <p className="college-name">{player.college}</p>
+  //       <p className="player-score">Score: {player.score}</p>
+  //       </div>
+  //     <div className="player-pieces-status">
+  //       {player.pieces.map((piece, idx) => (
+  //         <div 
+  //           key={idx}
+  //           className={`piece-status ${piece.isFinished ? 'finished' : piece.isHome ? 'home' : 'board'}`}
+  //           style={{ backgroundColor: player.color }}
+  //           onClick={() => selectPiece(piece.id)}
+  //         />
+  //       ))}
+  //     </div>
+  //   </div>
+  // );
 
-  const renderLudoBoard = () => (
-    <div className="ludo-board">
-      <div className="board-center">
-        <div className="center-logo">🎯</div>
-      </div>
-      
-      {/* Home areas */}
-      <div className="home-areas">
-        <div className="home-area red-home" style={{ backgroundColor: players[0].color }}>
-          {players[0].pieces.map((piece, idx) => (
-            <div 
-              key={idx}
-              className={`home-piece ${piece.isHome ? 'visible' : 'hidden'}`}
-              onClick={() => piece.isHome && diceValue === 6 ? selectPiece(piece.id) : null}
-            />
-          ))}
-        </div>
-        
-        <div className="home-area green-home" style={{ backgroundColor: players[1].color }}>
-          {players[1].pieces.map((piece, idx) => (
-            <div 
-              key={idx}
-              className={`home-piece ${piece.isHome ? 'visible' : 'hidden'}`}
-              onClick={() => piece.isHome && diceValue === 6 ? selectPiece(piece.id) : null}
-            />
-          ))}
-        </div>
-      </div>
-      
-      {/* Board path */}
-      <div className="board-path">
-        {boardPaths.map((path, idx) => (
-          <div 
-            key={idx}
-            className={`path-cell ${path.isSafe ? 'safe' : ''}`}
-            style={{ backgroundColor: path.color || 'transparent' }}
-          >
-            {path.pieces.map((piece, pieceIdx) => (
-              <div 
-                key={pieceIdx}
-                className="path-piece"
-                style={{ backgroundColor: players[piece.playerId].color }}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  // const renderLudoBoard = () => (
+  //   <div className="ludo-board">
+  //     <div className="board-center">
+  //       <div className="center-logo">🎯</div>
+  //     </div>
+  //   
+  //     {/* Home areas */}
+  //     <div className="home-areas">
+  //       <div className="home-area red-home" style={{ backgroundColor: players[0].color }}>
+  //         {players[0].pieces.map((piece, idx) => (
+  //           <div 
+  //             key={idx}
+  //             className={`home-piece ${piece.isHome ? 'visible' : 'hidden'}`}
+  //             onClick={() => piece.isHome && diceValue === 6 ? selectPiece(piece.id) : null}
+  //           />
+  //         ))}
+  //     </div>
+  //   
+  //       <div className="home-area green-home" style={{ backgroundColor: players[1].color }}>
+  //         {players[0].pieces.map((piece, idx) => (
+  //           <div 
+  //             key={idx}
+  //             className={`home-piece ${piece.isHome ? 'visible' : 'hidden'}`}
+  //             onClick={() => piece.isHome && diceValue === 6 ? selectPiece(piece.id) : null}
+  //           />
+  //         ))}
+  //       </div>
+  //     </div>
+  //   
+  //     {/* Board path */}
+  //     <div className="board-path">
+  //       {boardPaths.map((path, idx) => (
+  //         <div 
+  //           key={idx}
+  //           className={`path-cell ${path.isSafe ? 'safe' : ''}`}
+  //           style={{ backgroundColor: path.color || 'transparent' }}
+  //         >
+  //           {path.pieces.map((piece, pieceIdx) => (
+  //             <div 
+  //               key={pieceIdx}
+  //               className="path-piece"
+  //               style={{ backgroundColor: players[piece.playerId].color }}
+  //             />
+  //           ))}
+  //         </div>
+  //       ))}
+  //     </div>
+  //   </div>
+  // );
 
-  if (gameState === 'waiting') {
-    return (
-      <div className="game-board ludo-board">
-        <div className="game-header">
-          <button className="back-btn" onClick={onBack}>← Back to Games</button>
-          <h2>{gameType.name}</h2>
-          <div className="game-info">
-            <span>College vs College Battle</span>
-            <span>Waiting for players...</span>
-          </div>
-        </div>
+  // if (gameState === 'waiting') {
+  //   return (
+  //     <div className="game-board ludo-board">
+  //       <div className="game-header">
+  //         <button className="back-btn" onClick={onBack}>← Back to Games</button>
+  //         <h2>{gameType.name}</h2>
+  //         <div className="game-info">
+  //           <span>College vs College Battle</span>
+  //           <span>Waiting for players...</span>
+  //         </div>
+  //       </div>
+  //   
+  //       <div className="ludo-waiting">
+  //         <div className="college-battle">
+  //           <div className="college-vs">
+  //             <div className="college-card">
+  //               <h3>🏛️ IIT Guwahati</h3>
+  //               <p>Represented by Rahul Sharma</p>
+  //               <div className="college-color" style={{ backgroundColor: players[0].color }}></div>
+  //             </div>
+  //           
+  //               <div className="vs-badge">VS</div>
+  //           
+  //               <div className="college-card">
+  //               <h3>🎓 Gauhati University</h3>
+  //               <p>Represented by Priya Patel</p>
+  //               <div className="college-color" style={{ backgroundColor: players[1].color }}></div>
+  //             </div>
+  //           </div>
+  //         
+  //             <button className="start-battle-btn" onClick={startGame}>
+  //               🚀 Start College Battle!
+  //             </button>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     );
+  //   }
 
-        <div className="ludo-waiting">
-          <div className="college-battle">
-            <div className="college-vs">
-              <div className="college-card">
-                <h3>🏛️ IIT Guwahati</h3>
-                <p>Represented by Rahul Sharma</p>
-                <div className="college-color" style={{ backgroundColor: players[0].color }}></div>
-              </div>
-              
-              <div className="vs-badge">VS</div>
-              
-              <div className="college-card">
-                <h3>🎓 Gauhati University</h3>
-                <p>Represented by Priya Patel</p>
-                <div className="college-color" style={{ backgroundColor: players[1].color }}></div>
-              </div>
-            </div>
-            
-            <button className="start-battle-btn" onClick={startGame}>
-              🚀 Start College Battle!
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (gameState === 'finished') {
+  //   return (
+  //     <div className="game-board ludo-board">
+  //       <div className="game-header">
+  //         <button className="back-btn" onClick={onBack}>← Back to Games</button>
+  //         <h2>🏆 Battle Results</h2>
+  //       </div>
+  //   
+  //       <div className="battle-results">
+  //         <div className="winner-announcement">
+  //           <h2>🎉 {players[winner].college} Wins!</h2>
+  //           <p>Champion: {players[winner].name}</p>
+  //           <div className="winner-avatar">{players[winner].avatar}</div>
+  //         </div>
+  //       
+  //         <div className="final-scores">
+  //           {players.map((player, idx) => (
+  //             <div key={idx} className={`final-score ${idx === winner ? 'winner' : ''}`}>
+  //             <span className="college-name">{player.college}</span>
+  //             <span className="final-score-value">{player.score} pts</span>
+  //           </div>
+  //         ))}
+  //       </div>
+  //     
+  //         <button className="play-again-btn" onClick={() => window.location.reload()}>
+  //           🎮 Play Again
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
-  if (gameState === 'finished') {
-    return (
-      <div className="game-board ludo-board">
-        <div className="game-header">
-          <button className="back-btn" onClick={onBack}>← Back to Games</button>
-          <h2>🏆 Battle Results</h2>
-        </div>
-
-        <div className="battle-results">
-          <div className="winner-announcement">
-            <h2>🎉 {players[winner].college} Wins!</h2>
-            <p>Champion: {players[winner].name}</p>
-            <div className="winner-avatar">{players[winner].avatar}</div>
-          </div>
-          
-          <div className="final-scores">
-            {players.map((player, idx) => (
-              <div key={idx} className={`final-score ${idx === winner ? 'winner' : ''}`}>
-                <span className="college-name">{player.college}</span>
-                <span className="final-score-value">{player.score} pts</span>
-              </div>
-            ))}
-          </div>
-          
-          <button className="play-again-btn" onClick={() => window.location.reload()}>
-            🎮 Play Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="game-board ludo-board">
-      <div className="game-header">
-        <button className="back-btn" onClick={onBack}>← Back to Games</button>
-        <h2>{gameType.name}</h2>
-        <div className="game-info">
-          <span>🎯 College vs College Battle</span>
-          <span>🏆 First to finish all pieces wins!</span>
-        </div>
-      </div>
-
-      <div className="ludo-game-container">
-        {/* Player Profiles */}
-        <div className="player-profiles">
-          {players.map((player, idx) => renderPlayerProfile(player, idx === currentPlayer))}
-        </div>
-
-        {/* Game Board */}
-        <div className="game-board-section">
-          {renderLudoBoard()}
-        </div>
-
-        {/* Game Controls */}
-        <div className="game-controls-section">
-          <div className="dice-section">
-            {renderDice()}
-            <button 
-              className={`roll-dice-btn ${!canRoll || isRolling ? 'disabled' : ''}`}
-              onClick={rollDice}
-              disabled={!canRoll || isRolling}
-            >
-              {isRolling ? '🎲 Rolling...' : '🎲 Roll Dice'}
-            </button>
-          </div>
-          
-          <div className="game-status">
-            <p>Current Turn: <strong>{players[currentPlayer].name}</strong></p>
-            <p>College: <strong>{players[currentPlayer].college}</strong></p>
-            {diceValue > 0 && <p>Dice: <strong>{diceValue}</strong></p>}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+  // return (
+  //   <div className="game-board ludo-board">
+  //     <div className="game-header">
+  //       <button className="back-btn" onClick={onBack}>← Back to Games</button>
+  //       <h2>{gameType.name}</h2>
+  //       <div className="game-info">
+  //         <span>🎯 College vs College Battle</span>
+  //         <span>🏆 First to finish all pieces wins!</span>
+  //       </div>
+  //     </div>
+  //   
+  //     <div className="ludo-game-container">
+  //       {/* Player Profiles */}
+  //       <div className="player-profiles">
+  //         {players.map((player, idx) => renderPlayerProfile(player, idx === currentPlayer))}
+  //       </div>
+  //   
+  //       {/* Game Board */}
+  //       <div className="game-board-section">
+  //         {renderLudoBoard()}
+  //       </div>
+  //   
+  //       {/* Game Controls */}
+  //       <div className="game-controls-section">
+  //         <div className="dice-section">
+  //           {renderDice()}
+  //           <button 
+  //             className={`roll-dice-btn ${!canRoll || isRolling ? 'disabled' : ''}`}
+  //             onClick={rollDice}
+  //             disabled={!canRoll || isRolling}
+  //           >
+  //             {isRolling ? '🎲 Rolling...' : '🎲 Roll Dice'}
+  //           </button>
+  //         </div>
+  //       
+  //         <div className="game-status">
+  //           <p>Current Turn: <strong>{players[currentPlayer].name}</strong></p>
+  //           <p>College: <strong>{players[currentPlayer].college}</strong></p>
+  //           {diceValue > 0 && <p>Dice: <strong>{diceValue}</strong></p>}
+  //         </div>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
+// }; // End of LudoGame component
 
 
 
