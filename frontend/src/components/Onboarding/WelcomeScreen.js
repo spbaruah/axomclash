@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FaRocket, FaSignInAlt } from 'react-icons/fa';
+import { FaRocket, FaSignInAlt, FaUserPlus } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const WelcomeScreen = ({ onNext, onLoginModeChange }) => {
-  const { loginUser, isAdmin, loading: authLoading } = useAuth();
+  const { loginUser, isAdmin, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(true);
   const [loginData, setLoginData] = useState({
@@ -24,7 +25,7 @@ const WelcomeScreen = ({ onNext, onLoginModeChange }) => {
       }
       hasCheckedAdminRef.current = true;
     }
-  }, [authLoading, isAdmin, navigate]); // Only depend on authLoading
+  }, [authLoading]); // Only depend on authLoading
 
   // Notify parent component about login mode changes
   useEffect(() => {

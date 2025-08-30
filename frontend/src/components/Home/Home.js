@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { FaUser, FaComments, FaComment, FaShare, FaPlus, FaEllipsisV } from 'react-icons/fa';
+import { FaTrophy, FaFire, FaUsers, FaStar, FaBell, FaSearch, FaUser, FaComments, FaComment, FaShare, FaSignOutAlt, FaPlus, FaCrown, FaHeart, FaThumbsUp, FaLaugh, FaEllipsisV } from 'react-icons/fa';
 import CreatePost from './CreatePost';
 import PostComments from './PostComments';
 import Banner from './Banner';
@@ -12,17 +12,16 @@ import ReportPostModal from '../common/ReportPostModal';
 import './Home.css';
 
 const Home = () => {
-  const { userProfile, signOut } = useAuth();
+  const { userProfile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [collegeRankings, setCollegeRankings] = useState([]);
 
   const [posts, setPosts] = useState([]);
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // const [userCollegeRank, setUserCollegeRank] = useState(null);
-  // const [pointsToNext, setPointsToNext] = useState(0);
+  const [userCollegeRank, setUserCollegeRank] = useState(null);
+  const [pointsToNext, setPointsToNext] = useState(0);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
@@ -32,7 +31,7 @@ const Home = () => {
   const [sharingToChat, setSharingToChat] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
-  // const [blockedUsers, setBlockedUsers] = useState(new Set());
+  const [blockedUsers, setBlockedUsers] = useState(new Set());
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostForReport, setSelectedPostForReport] = useState(null);
 
@@ -57,13 +56,7 @@ const Home = () => {
     }
   };
 
-  // const handleLogout = async () => {
-  //   try {
-  //     await signOut();
-  //   } catch (error) {
-  //     console.error('Logout error:', error);
-  //   }
-  // };
+  // Removed unused handleLogout function
 
   const handleUserProfileClick = (userId) => {
     if (userId && userId !== userProfile?.id) {
@@ -79,7 +72,7 @@ const Home = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // setBlockedUsers(prev => new Set([...prev, userId]));
+      setBlockedUsers(prev => new Set([...prev, userId]));
       // Remove posts from blocked user
       setPosts(prevPosts => prevPosts.filter(post => post.user_id !== userId));
       toast.success('User blocked successfully');
@@ -89,7 +82,44 @@ const Home = () => {
     }
   };
 
-  const fetchHomeData = useCallback(async () => {
+  useEffect(() => {
+    if (userProfile) {
+      fetchHomeData();
+    }
+  }, [userProfile]);
+
+  // Check for query parameter to open create post modal
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('openCreatePost') === 'true') {
+      setShowCreatePost(true);
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location.search]);
+
+  // Handle clicking outside reactions dropdown and post menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.reactions-container') && 
+          !event.target.closest('.post-menu-container')) {
+        setPosts(prevPosts => 
+          prevPosts.map(post => ({
+            ...post,
+            showReactions: false
+          }))
+        );
+        setShowPostMenu(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const fetchHomeData = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -130,6 +160,8 @@ const Home = () => {
       const rankings = collegesRes.data.colleges || [];
       setCollegeRankings(rankings);
 
+
+
       // Process posts (respect visibility settings)
       const allPosts = postsWithReactions;
       const filteredPosts = allPosts
@@ -166,67 +198,28 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-  }, [userProfile]);
+  };
 
-  useEffect(() => {
-    if (userProfile) {
-      fetchHomeData();
+
+
+  const handleQuickAction = (action) => {
+    switch (action) {
+      case 'join-game':
+        window.location.href = '/games';
+        break;
+      case 'college-chat':
+        window.location.href = '/chat';
+        break;
+      case 'challenges':
+        window.location.href = '/challenges';
+        break;
+      case 'leaderboard':
+        window.location.href = '/leaderboard';
+        break;
+      default:
+        break;
     }
-  }, [userProfile, fetchHomeData]);
-
-  // Check for query parameter to open create post modal
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get('openCreatePost') === 'true') {
-      setShowCreatePost(true);
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [location.search]);
-
-  // Handle clicking outside reactions dropdown and post menu
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.reactions-container') && 
-          !event.target.closest('.post-menu-container')) {
-        setPosts(prevPosts => 
-          prevPosts.map(post => ({
-            ...post,
-            showReactions: false
-          }))
-        );
-        setShowPostMenu(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-
-
-
-
-  // const handleQuickAction = (action) => {
-  //   switch (action) {
-  //     case 'join-game':
-  //       window.location.href = '/games';
-  //       break;
-  //     case 'college-chat':
-  //       window.location.href = '/chat';
-  //       break;
-  //     case 'challenges':
-  //       window.location.href = '/challenges';
-  //       break;
-  //     case 'leaderboard':
-  //       window.location.href = '/leaderboard';
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // };
+  };
 
   const handleCreatePost = () => {
     setShowCreatePost(true);

@@ -154,7 +154,7 @@ export const SocketProvider = ({ children }) => {
       setIsConnected(false);
       setHasShownConnectionMessage(false);
     }
-  }, [userProfile, hasShownConnectionMessage, socket]);
+  }, [userProfile, hasShownConnectionMessage]);
 
   // Socket utility functions
   const joinGame = (gameId) => {

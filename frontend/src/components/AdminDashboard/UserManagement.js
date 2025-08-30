@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './UserManagement.css';
 import { API_URL } from '../../services/api';
 
@@ -11,24 +11,12 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
 
-  const filterUsers = useCallback(() => {
-    let filtered = users;
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.college_name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filter by status
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(user => user.status === filterStatus);
-    }
-
-    setFilteredUsers(filtered);
+  useEffect(() => {
+    filterUsers();
   }, [users, searchTerm, filterStatus]);
 
   const fetchUsers = async () => {
@@ -87,13 +75,25 @@ const UserManagement = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const filterUsers = () => {
+    let filtered = users;
 
-  useEffect(() => {
-    filterUsers();
-  }, [filterUsers]);
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(user =>
+        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.college_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by status
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(user => user.status === filterStatus);
+    }
+
+    setFilteredUsers(filtered);
+  };
 
   const handleUserAction = (userId, action) => {
     // Handle user actions (suspend, activate, delete)

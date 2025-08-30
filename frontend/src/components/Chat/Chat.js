@@ -15,7 +15,7 @@ const Chat = () => {
   const [typingUsers, setTypingUsers] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMediaOptions, setShowMediaOptions] = useState(false);
-  // const [activeChat, setActiveChat] = useState('college'); // For future individual chats
+  const [activeChat, setActiveChat] = useState('college'); // For future individual chats
   const [onlineUsersLoading, setOnlineUsersLoading] = useState(true);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -81,6 +81,45 @@ const Chat = () => {
     };
   }, [showHeaderMenu, showEmojiPicker, showMediaOptions, showMessageMenu, showReactionBar]);
 
+  // Fetch messages when component mounts or college changes
+  useEffect(() => {
+    if (user?.college_id) {
+      fetchMessages();
+      fetchOnlineUsers();
+      startTypingListener();
+      // Mark user as online when chat loads
+      updateOnlineStatus(true);
+    }
+  }, [user?.college_id]);
+
+  // Cleanup when component unmounts
+  useEffect(() => {
+    return () => {
+      // Mark user as offline when chat unmounts
+      if (user?.college_id) {
+        updateOnlineStatus(false);
+      }
+      // Clear any pending long press timeout
+      if (longPressTimeout) {
+        clearTimeout(longPressTimeout);
+      }
+    };
+  }, [user?.college_id, longPressTimeout]);
+
+  // Keep online status fresh while user is active
+  useEffect(() => {
+    if (user?.college_id) {
+      const interval = setInterval(() => {
+        updateOnlineStatus(true);
+      }, 30000); // Update every 30 seconds
+
+      return () => {
+        clearInterval(interval);
+        updateOnlineStatus(false);
+      };
+    }
+  }, [user?.college_id]);
+
   // Fetch chat messages
   const fetchMessages = useCallback(async () => {
     try {
@@ -96,7 +135,7 @@ const Chat = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.college_id]);
+  }, [user.college_id, getAuthToken]);
 
   // Fetch online users
   const fetchOnlineUsers = useCallback(async () => {
@@ -113,7 +152,7 @@ const Chat = () => {
     } finally {
       setOnlineUsersLoading(false);
     }
-  }, [user?.college_id]);
+  }, [user.college_id, getAuthToken]);
 
   // Update user online status
   const updateOnlineStatus = useCallback(async (isOnline) => {
@@ -126,45 +165,7 @@ const Chat = () => {
     } catch (error) {
       console.error('Error updating online status:', error);
     }
-  }, []);
-
-  // Initialize chat when component mounts
-  useEffect(() => {
-    if (user?.college_id) {
-      fetchMessages();
-      fetchOnlineUsers();
-      // Mark user as online when chat loads
-      updateOnlineStatus(true);
-    }
-  }, [user?.college_id, fetchMessages, fetchOnlineUsers, updateOnlineStatus]);
-
-  // Cleanup when component unmounts
-  useEffect(() => {
-    return () => {
-      // Mark user as offline when chat unmounts
-      if (user?.college_id) {
-        updateOnlineStatus(false);
-      }
-      // Clear any pending long press timeout
-      if (longPressTimeout) {
-        clearTimeout(longPressTimeout);
-      }
-    };
-  }, [user?.college_id, longPressTimeout, updateOnlineStatus]);
-
-  // Keep online status fresh while user is active
-  useEffect(() => {
-    if (user?.college_id) {
-      const interval = setInterval(() => {
-        updateOnlineStatus(true);
-      }, 30000); // Update every 30 seconds
-
-      return () => {
-        clearInterval(interval);
-        updateOnlineStatus(false);
-      };
-    }
-  }, [user?.college_id, updateOnlineStatus]);
+  }, [getAuthToken]);
 
   // Send text message or update existing message
   const sendMessage = async () => {
@@ -227,11 +228,7 @@ const Chat = () => {
     }, 1000);
   }, [user.username]);
 
-  // Start typing listener
-  const startTypingListener = () => {
-    // This would typically be done via Socket.IO
-    // For now, we'll simulate it
-  };
+  // Removed unused startTypingListener function
 
   // Clear all chat messages
   const clearChat = async () => {
@@ -705,7 +702,7 @@ const Chat = () => {
           <div className="message-media">
             <img 
               src={message.media_url} 
-              alt="" 
+              alt="Photo" 
               className="message-photo"
               onError={(e) => {
                 e.target.style.display = 'none';
@@ -968,7 +965,7 @@ const Chat = () => {
                       <div className="reply-content">
                         {message.reply_message_type === 'photo' ? (
                           <div className="reply-media">
-                            <img src={message.reply_media_url} alt="" />
+                            <img src={message.reply_media_url} alt="Photo" />
                             {message.reply_content && <span>{message.reply_content}</span>}
                           </div>
                         ) : message.reply_message_type === 'video' ? (
@@ -1146,7 +1143,7 @@ const Chat = () => {
                    <div className="reply-content">
                      {replyingTo.message_type === 'photo' ? (
                        <div className="reply-media">
-                         <img src={replyingTo.media_url} alt="" />
+                         <img src={replyingTo.media_url} alt="Photo" />
                          {replyingTo.content && <span>{replyingTo.content}</span>}
                        </div>
                      ) : replyingTo.message_type === 'video' ? (

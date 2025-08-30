@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTrophy, FaCrown, FaMedal, FaUser, FaSearch, FaArrowUp, FaArrowDown, FaMinus, FaStar, FaUsers, FaChartLine, FaSpinner } from 'react-icons/fa';
+import { FaTrophy, FaCrown, FaMedal, FaUser, FaSearch, FaArrowUp, FaArrowDown, FaMinus, FaStar, FaUsers, FaChartLine, FaSpinner, FaBell } from 'react-icons/fa';
 import BottomNavigation from '../common/BottomNavigation';
 import { getCollegeRankings, getUserRankings } from '../../services/api';
 import './Leaderboard.css';
@@ -14,12 +14,12 @@ const Leaderboard = () => {
   const [studentRankings, setStudentRankings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // const [lastUpdated, setLastUpdated] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [previousPoints, setPreviousPoints] = useState({});
-  // const [nextRefresh, setNextRefresh] = useState(30);
+  const [nextRefresh, setNextRefresh] = useState(30);
 
   // Fetch college rankings
-  const fetchCollegeRankings = useCallback(async () => {
+  const fetchCollegeRankings = async () => {
     try {
       setLoading(true);
       const response = await getCollegeRankings();
@@ -49,17 +49,17 @@ const Leaderboard = () => {
       setPreviousPoints(newPreviousPoints);
       
       setCollegeRankings(colleges);
-      // setLastUpdated(new Date());
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching college rankings:', err);
       setError('Failed to fetch college rankings');
     } finally {
       setLoading(false);
     }
-  }, [collegeRankings]);
+  };
 
   // Fetch student rankings
-  const fetchStudentRankings = useCallback(async () => {
+  const fetchStudentRankings = async () => {
     try {
       setLoading(true);
       const response = await getUserRankings();
@@ -89,14 +89,14 @@ const Leaderboard = () => {
       setPreviousPoints(newPreviousPoints);
       
       setStudentRankings(students);
-      // setLastUpdated(new Date());
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching student rankings:', err);
       setError('Failed to fetch student rankings');
     } finally {
       setLoading(false);
     }
-  }, [studentRankings]);
+  };
 
   // Helper function to determine level based on points
   const getLevelFromPoints = (points) => {
@@ -148,7 +148,7 @@ const Leaderboard = () => {
     } else {
       fetchStudentRankings();
     }
-  }, [activeTab, fetchCollegeRankings, fetchStudentRankings]);
+  }, [activeTab]);
 
   // Refresh data every 30 seconds to keep it dynamic
   useEffect(() => {
@@ -158,19 +158,19 @@ const Leaderboard = () => {
       } else {
         fetchStudentRankings();
       }
-      // setNextRefresh(30);
+      setNextRefresh(30);
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
-  }, [activeTab, fetchCollegeRankings, fetchStudentRankings]);
+  }, [activeTab]);
 
   // Countdown timer for next refresh
   useEffect(() => {
     const countdown = setInterval(() => {
-      // setNextRefresh(prev => {
-      //   if (prev <= 1) return 30;
-      //   return prev - 1;
-      // });
+      setNextRefresh(prev => {
+        if (prev <= 1) return 30;
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(countdown);
