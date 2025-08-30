@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
+import api from '../../services/axios';
 import toast from 'react-hot-toast';
 import { FaTimes, FaImage, FaVideo, FaPoll, FaSmile, FaPaperPlane } from 'react-icons/fa';
 import './CreatePost.css';
@@ -92,38 +92,30 @@ const CreatePost = ({ isOpen, onClose, onPostCreated, onRefreshData }) => {
       // Upload media files if any
       if (mediaFiles.length > 0) {
         console.log('Uploading media files:', mediaFiles);
-        const formData = new FormData();
+        // Media files will be uploaded directly with the post creation
+        // No separate upload step needed
+      }
+
+      // Create FormData for post with media files
+      const formData = new FormData();
+      formData.append('type', postType);
+      formData.append('content', content.trim());
+      formData.append('visibility', visibility);
+      
+      if (postType === 'poll' && pollOptions.filter(opt => opt.trim()).length > 0) {
+        formData.append('poll_options', JSON.stringify(pollOptions.filter(opt => opt.trim())));
+      }
+      
+      // Add media files
+      if (mediaFiles.length > 0) {
         mediaFiles.forEach(file => {
           formData.append('media', file);
         });
-        
-        const uploadResponse = await axios.post('/api/posts/upload', formData, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        
-        if (uploadResponse.data.success && uploadResponse.data.files) {
-          mediaUrls = uploadResponse.data.files;
-          console.log('Upload response:', uploadResponse.data);
-          console.log('Media URLs:', mediaUrls);
-        } else {
-          throw new Error('Upload failed: ' + (uploadResponse.data.message || 'Unknown error'));
-        }
       }
 
-      const postData = {
-        type: postType,
-        content: content.trim(),
-        media_urls: postType === 'text' ? [] : mediaUrls,
-        poll_options: postType === 'poll' ? pollOptions.filter(opt => opt.trim()) : null,
-        visibility: visibility
-      };
-
-      const response = await axios.post('/api/posts', postData, {
+      const response = await api.post('/api/posts', formData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+          'Content-Type': 'multipart/form-data'
         }
       });
 

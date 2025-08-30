@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../services/axios';
 import toast from 'react-hot-toast';
+import { getFullImageUrl, isValidImageUrl } from '../../utils/imageUtils';
 import { FaTrophy, FaFire, FaUsers, FaStar, FaBell, FaSearch, FaUser, FaComments, FaComment, FaShare, FaSignOutAlt, FaPlus, FaCrown, FaHeart, FaThumbsUp, FaLaugh, FaEllipsisV } from 'react-icons/fa';
 import CreatePost from './CreatePost';
 import PostComments from './PostComments';
@@ -642,13 +643,14 @@ const Home = () => {
                       {console.log(`Rendering media for post ${post.id}:`, post.media_urls)}
                       {post.media_urls.map((url, i) => {
                         // Additional safety check for valid URLs
-                        if (typeof url === 'string' && url.trim()) {
-                          console.log(`Rendering image ${i}:`, url);
-                          return <img key={i} src={url} alt="Post media" onClick={() => handlePhotoClick(url)} onError={(e) => {
-                            console.error(`Failed to load image:`, url, e);
+                        if (isValidImageUrl(url)) {
+                          const fullImageUrl = getFullImageUrl(url);
+                          console.log(`Rendering image ${i}:`, fullImageUrl);
+                          return <img key={i} src={fullImageUrl} alt="Post media" onClick={() => handlePhotoClick(fullImageUrl)} onError={(e) => {
+                            console.error(`Failed to load image:`, fullImageUrl, e);
                             e.target.style.display = 'none';
                           }} onLoad={() => {
-                            console.log(`Successfully loaded image:`, url);
+                            console.log(`Successfully loaded image:`, fullImageUrl);
                           }} />;
                         }
                         return null;
