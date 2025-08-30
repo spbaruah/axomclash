@@ -198,7 +198,22 @@ router.post('/', verifyAdminToken, upload.single('image'), async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error creating banner:', error);
-    res.status(500).json({ error: 'Failed to create banner' });
+    console.error('❌ Error stack:', error.stack);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to create banner';
+    if (error.code === 'ER_NO_SUCH_TABLE') {
+      errorMessage = 'Banners table not found in database';
+    } else if (error.code === 'ER_BAD_FIELD_ERROR') {
+      errorMessage = 'Invalid field in banner data';
+    } else if (error.code === 'ER_DUP_ENTRY') {
+      errorMessage = 'Banner with this title already exists';
+    }
+    
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
   }
 });
 
