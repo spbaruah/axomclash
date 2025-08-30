@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DashboardStats.css';
-import api from '../../services/axios';
+import adminApi from '../../services/adminAxios';
 
 const DashboardStats = () => {
   const [stats, setStats] = useState({
@@ -22,7 +22,7 @@ const DashboardStats = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await api.get('/api/admin/stats');
+      const response = await adminApi.get('/api/admin/stats');
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -43,7 +43,7 @@ const DashboardStats = () => {
 
   const fetchRecentActivity = async () => {
     try {
-      const response = await api.get('/api/admin/recent-activity');
+      const response = await adminApi.get('/api/admin/recent-activity');
       setRecentActivity(response.data);
     } catch (error) {
       console.error('Error fetching recent activity:', error);

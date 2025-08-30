@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './PostManagement.css';
-import api from '../../services/axios';
+import adminApi from '../../services/adminAxios';
 
 const PostManagement = () => {
   const [posts, setPosts] = useState([]);
@@ -12,7 +12,7 @@ const PostManagement = () => {
 
   const fetchPosts = async () => {
     try {
-      const response = await api.get('/api/admin/posts');
+      const response = await adminApi.get('/api/admin/posts');
       setPosts(response.data);
     } catch (error) {
       console.error('Error fetching posts:', error);

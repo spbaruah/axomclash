@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ReportsManagement.css';
-import { API_URL } from '../../services/api';
+import adminApi from '../../services/adminAxios';
 
 const ReportsManagement = () => {
   const [reports, setReports] = useState([]);
@@ -15,19 +15,8 @@ const ReportsManagement = () => {
 
   const fetchReports = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_URL}/api/admin/reports`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setReports(data);
-      } else {
-        console.error('Failed to fetch reports');
-      }
+      const response = await adminApi.get('/api/admin/reports');
+      setReports(response.data);
     } catch (error) {
       console.error('Error fetching reports:', error);
     } finally {
@@ -38,28 +27,16 @@ const ReportsManagement = () => {
   const handleReportAction = async (reportId, action, status, adminNotes = '') => {
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_URL}/api/admin/reports/${reportId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          status,
-          adminNotes,
-          action
-        })
+      const response = await adminApi.put(`/api/admin/reports/${reportId}`, {
+        status,
+        adminNotes,
+        action
       });
 
-      if (response.ok) {
-        // Refresh reports
-        await fetchReports();
-        setShowReportModal(false);
-        setSelectedReport(null);
-      } else {
-        console.error('Failed to update report');
-      }
+      // Refresh reports
+      await fetchReports();
+      setShowReportModal(false);
+      setSelectedReport(null);
     } catch (error) {
       console.error('Error updating report:', error);
     } finally {
@@ -70,22 +47,12 @@ const ReportsManagement = () => {
   const handleRemovePost = async (postId) => {
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_URL}/api/admin/posts/${postId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      await adminApi.delete(`/api/admin/posts/${postId}`);
 
-      if (response.ok) {
-        // Refresh reports
-        await fetchReports();
-        setShowReportModal(false);
-        setSelectedReport(null);
-      } else {
-        console.error('Failed to remove post');
-      }
+      // Refresh reports
+      await fetchReports();
+      setShowReportModal(false);
+      setSelectedReport(null);
     } catch (error) {
       console.error('Error removing post:', error);
     } finally {

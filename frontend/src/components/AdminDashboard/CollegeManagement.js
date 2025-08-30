@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CollegeManagement.css';
-import { API_URL } from '../../services/api';
+import adminApi from '../../services/adminAxios';
 
 const CollegeManagement = () => {
   const [colleges, setColleges] = useState([]);
@@ -12,17 +12,8 @@ const CollegeManagement = () => {
 
   const fetchColleges = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_URL}/api/admin/colleges`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setColleges(data);
-      }
+      const response = await adminApi.get('/api/admin/colleges');
+      setColleges(response.data);
     } catch (error) {
       console.error('Error fetching colleges:', error);
       // Mock data for demo

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './UserManagement.css';
-import { API_URL } from '../../services/api';
+import adminApi from '../../services/adminAxios';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -21,17 +21,8 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_URL}/api/admin/users`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
+      const response = await adminApi.get('/api/admin/users');
+      setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
       // Mock data for demo

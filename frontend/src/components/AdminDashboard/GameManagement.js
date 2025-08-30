@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './GameManagement.css';
-import { API_URL } from '../../services/api';
+import adminApi from '../../services/adminAxios';
 
 const GameManagement = () => {
   const [games, setGames] = useState([]);
@@ -12,17 +12,8 @@ const GameManagement = () => {
 
   const fetchGames = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_URL}/api/admin/games`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setGames(data);
-      }
+      const response = await adminApi.get('/api/admin/games');
+      setGames(response.data);
     } catch (error) {
       console.error('Error fetching games:', error);
       // Mock data for demo
