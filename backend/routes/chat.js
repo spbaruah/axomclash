@@ -143,23 +143,24 @@ router.get('/college/:collegeId', verifyToken, async (req, res) => {
     
     if (messageIds.length > 0) {
       try {
-        const placeholders = messageIds.map(() => '?').join(',');
+        // Use FIND_IN_SET for MySQL compatibility with dynamic IN clauses
+        const messageIdsString = messageIds.join(',');
         
         // Get reaction counts
         const [reactionsResult] = await db.promise().execute(
           `SELECT message_id, reaction_type, COUNT(*) as count
            FROM chat_reactions 
-           WHERE message_id IN (${placeholders})
+           WHERE FIND_IN_SET(message_id, ?)
            GROUP BY message_id, reaction_type`,
-          messageIds
+          [messageIdsString]
         );
         
         // Get user's specific reactions
         const [userReactionsResult] = await db.promise().execute(
           `SELECT message_id, reaction_type
            FROM chat_reactions 
-           WHERE message_id IN (${placeholders}) AND user_id = ?`,
-          [...messageIds, req.user.userId]
+           WHERE FIND_IN_SET(message_id, ?) AND user_id = ?`,
+          [messageIdsString, req.user.userId]
         );
         
         console.log('Reactions fetched:', reactionsResult);
