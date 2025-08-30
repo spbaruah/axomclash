@@ -72,7 +72,7 @@ router.put('/profile-picture', verifyToken, profileUpload.single('avatar'), asyn
       }
     }
 
-    res.json({ message: 'Profile picture updated', profile_picture: relativePath });
+    res.json({ message: 'Profile picture updated', profile_picture: imageUrl });
   } catch (error) {
     console.error('Profile picture upload error:', error);
     res.status(500).json({ error: 'Failed to update profile picture' });
@@ -119,7 +119,7 @@ router.put('/cover', verifyToken, coverUpload.single('cover'), async (req, res) 
       'UPDATE users SET cover_photo = ? WHERE id = ?',[imageUrl, userId]
     );
 
-    res.json({ message: 'Cover photo updated', cover_photo: relativePath });
+    res.json({ message: 'Cover photo updated', cover_photo: imageUrl });
   } catch (error) {
     console.error('Cover upload error:', error);
     res.status(500).json({ error: 'Failed to update cover photo' });
