@@ -103,7 +103,11 @@ router.post('/user/online-status', verifyToken, async (req, res) => {
 // Get chat messages for a college with pagination and filtering
 router.get('/college/:collegeId', verifyToken, async (req, res) => {
   try {
-    const { collegeId } = req.params;
+    const collegeId = parseInt(req.params.collegeId);
+    if (isNaN(collegeId)) {
+      return res.status(400).json({ error: 'Invalid college ID' });
+    }
+    
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const messageType = req.query.messageType; // Filter by message type
@@ -223,7 +227,10 @@ router.get('/college/:collegeId', verifyToken, async (req, res) => {
 // Send a text message
 router.post('/college/:collegeId/text', verifyToken, async (req, res) => {
   try {
-    const { collegeId } = req.params;
+    const collegeId = parseInt(req.params.collegeId);
+    if (isNaN(collegeId)) {
+      return res.status(400).json({ error: 'Invalid college ID' });
+    }
     const { content, replyToId } = req.body;
     const userId = req.user.userId;
 
@@ -280,7 +287,10 @@ router.post('/college/:collegeId/text', verifyToken, async (req, res) => {
 // Upload and send media message (photo, voice, document)
 router.post('/college/:collegeId/media', verifyToken, upload.single('media'), async (req, res) => {
   try {
-    const { collegeId } = req.params;
+    const collegeId = parseInt(req.params.collegeId);
+    if (isNaN(collegeId)) {
+      return res.status(400).json({ error: 'Invalid college ID' });
+    }
     const { messageType, caption, replyToId } = req.body;
     const userId = req.user.userId;
 
@@ -371,7 +381,10 @@ router.post('/college/:collegeId/media', verifyToken, upload.single('media'), as
 // Send a voice message (for when voice is recorded directly in browser)
 router.post('/college/:collegeId/voice', verifyToken, async (req, res) => {
   try {
-    const { collegeId } = req.params;
+    const collegeId = parseInt(req.params.collegeId);
+    if (isNaN(collegeId)) {
+      return res.status(400).json({ error: 'Invalid college ID' });
+    }
     const { audioBlob, duration, caption } = req.body;
     const userId = req.user.userId;
 
@@ -410,7 +423,10 @@ router.post('/college/:collegeId/voice', verifyToken, async (req, res) => {
 // Get online users for a college
 router.get('/college/:collegeId/online-users', verifyToken, async (req, res) => {
   try {
-    const { collegeId } = req.params;
+    const collegeId = parseInt(req.params.collegeId);
+    if (isNaN(collegeId)) {
+      return res.status(400).json({ error: 'Invalid college ID' });
+    }
     
     // Get users who have been active in the last 10 minutes (using typing indicators as a proxy)
     const [activeUsers] = await db.promise().execute(
@@ -449,7 +465,10 @@ router.get('/college/:collegeId/online-users', verifyToken, async (req, res) => 
 // Pin/Unpin a message (admin only)
 router.put('/:messageId/pin', verifyToken, async (req, res) => {
   try {
-    const { messageId } = req.params;
+    const messageId = parseInt(req.params.messageId);
+    if (isNaN(messageId)) {
+      return res.status(400).json({ error: 'Invalid message ID' });
+    }
     const { is_pinned } = req.body;
 
     // Note: In a real app, you'd check if user has admin privileges
@@ -468,7 +487,10 @@ router.put('/:messageId/pin', verifyToken, async (req, res) => {
 // Get pinned messages for a college
 router.get('/college/:collegeId/pinned', verifyToken, async (req, res) => {
   try {
-    const { collegeId } = req.params;
+    const collegeId = parseInt(req.params.collegeId);
+    if (isNaN(collegeId)) {
+      return res.status(400).json({ error: 'Invalid college ID' });
+    }
     
     const [messages] = await db.promise().execute(
       `SELECT cm.*, u.username, u.profile_picture
@@ -489,7 +511,10 @@ router.get('/college/:collegeId/pinned', verifyToken, async (req, res) => {
 // Edit a message (only by sender)
 router.put('/:messageId', verifyToken, async (req, res) => {
   try {
-    const { messageId } = req.params;
+    const messageId = parseInt(req.params.messageId);
+    if (isNaN(messageId)) {
+      return res.status(400).json({ error: 'Invalid message ID' });
+    }
     const { content } = req.body;
     const userId = req.user.userId;
 
@@ -527,7 +552,10 @@ router.put('/:messageId', verifyToken, async (req, res) => {
 // Edit a message (only by sender) - with /message/ prefix for frontend compatibility
 router.put('/message/:messageId', verifyToken, async (req, res) => {
   try {
-    const { messageId } = req.params;
+    const messageId = parseInt(req.params.messageId);
+    if (isNaN(messageId)) {
+      return res.status(400).json({ error: 'Invalid message ID' });
+    }
     const { content } = req.body;
     const userId = req.user.userId;
 
@@ -578,7 +606,10 @@ router.put('/message/:messageId', verifyToken, async (req, res) => {
 // Delete a message (only by sender)
 router.delete('/:messageId', verifyToken, async (req, res) => {
   try {
-    const { messageId } = req.params;
+    const messageId = parseInt(req.params.messageId);
+    if (isNaN(messageId)) {
+      return res.status(400).json({ error: 'Invalid message ID' });
+    }
     const userId = req.user.userId;
 
     // Check if user owns the message
@@ -611,7 +642,10 @@ router.delete('/:messageId', verifyToken, async (req, res) => {
 // Delete a message (only by sender) - with /message/ prefix for frontend compatibility
 router.delete('/message/:messageId', verifyToken, async (req, res) => {
   try {
-    const { messageId } = req.params;
+    const messageId = parseInt(req.params.messageId);
+    if (isNaN(messageId)) {
+      return res.status(400).json({ error: 'Invalid message ID' });
+    }
     const userId = req.user.userId;
 
     // Check if user owns the message
@@ -644,7 +678,10 @@ router.delete('/message/:messageId', verifyToken, async (req, res) => {
 // Add reaction to a message
 router.post('/message/:messageId/reaction', verifyToken, async (req, res) => {
   try {
-    const { messageId } = req.params;
+    const messageId = parseInt(req.params.messageId);
+    if (isNaN(messageId)) {
+      return res.status(400).json({ error: 'Invalid message ID' });
+    }
     const { reactionType } = req.body;
     const userId = req.user.userId;
 
@@ -692,7 +729,10 @@ router.post('/message/:messageId/reaction', verifyToken, async (req, res) => {
 // Remove reaction from a message
 router.delete('/message/:messageId/reaction', verifyToken, async (req, res) => {
   try {
-    const { messageId } = req.params;
+    const messageId = parseInt(req.params.messageId);
+    if (isNaN(messageId)) {
+      return res.status(400).json({ error: 'Invalid message ID' });
+    }
     const userId = req.user.userId;
 
     // Remove the reaction
@@ -711,7 +751,10 @@ router.delete('/message/:messageId/reaction', verifyToken, async (req, res) => {
 // Clear all chat messages for a college (admin only)
 router.delete('/college/:collegeId/clear', verifyToken, async (req, res) => {
   try {
-    const { collegeId } = req.params;
+    const collegeId = parseInt(req.params.collegeId);
+    if (isNaN(collegeId)) {
+      return res.status(400).json({ error: 'Invalid college ID' });
+    }
     const userId = req.user.userId;
 
     // Check if user is admin or has permission to clear chat

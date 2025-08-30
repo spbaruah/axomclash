@@ -309,12 +309,45 @@ const setupDatabase = async () => {
         media_url VARCHAR(500) NULL,
         poll_data JSON NULL,
         is_pinned BOOLEAN DEFAULT FALSE,
+        reply_to_id INT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (college_id) REFERENCES colleges(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (reply_to_id) REFERENCES chat_messages(id) ON DELETE SET NULL,
         INDEX idx_college (college_id),
         INDEX idx_user (user_id),
-        INDEX idx_created (created_at)
+        INDEX idx_created (created_at),
+        INDEX idx_reply (reply_to_id)
+      )`,
+
+      // Chat Reactions table
+      `CREATE TABLE IF NOT EXISTS chat_reactions (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        message_id INT NOT NULL,
+        user_id INT NOT NULL,
+        reaction_type ENUM('like', 'love', 'laugh', 'wow', 'sad', 'angry') NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_message_user_reaction (message_id, user_id),
+        INDEX idx_message (message_id),
+        INDEX idx_user (user_id),
+        INDEX idx_reaction (reaction_type)
+      )`,
+
+      // Chat Typing Indicators table
+      `CREATE TABLE IF NOT EXISTS chat_typing_indicators (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NOT NULL,
+        college_id INT NOT NULL,
+        is_typing BOOLEAN DEFAULT FALSE,
+        last_typing_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (college_id) REFERENCES colleges(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_user_college_typing (user_id, college_id),
+        INDEX idx_user (user_id),
+        INDEX idx_college (college_id),
+        INDEX idx_typing (is_typing)
       )`,
 
       // Points History table
