@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/axios';
 import toast from 'react-hot-toast';
 import { FaTrophy, FaFire, FaUsers, FaStar, FaBell, FaSearch, FaUser, FaComments, FaComment, FaShare, FaSignOutAlt, FaPlus, FaCrown, FaHeart, FaThumbsUp, FaLaugh, FaEllipsisV } from 'react-icons/fa';
 import CreatePost from './CreatePost';
@@ -68,9 +68,7 @@ const Home = () => {
   const blockUser = async (userId) => {
     try {
       const token = localStorage.getItem('authToken');
-      await axios.post(`/api/users/block/${userId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post(`/api/users/block/${userId}`);
       
       setBlockedUsers(prev => new Set([...prev, userId]));
       // Remove posts from blocked user
@@ -126,13 +124,9 @@ const Home = () => {
       
       // Fetch all data in parallel
       const [collegesRes, postsRes, bannersRes] = await Promise.all([
-        axios.get('/api/colleges/rankings'),
-        axios.get('/api/posts', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`
-          }
-        }),
-        axios.get('/api/banners')
+        api.get('/api/colleges/rankings'),
+        api.get('/api/posts'),
+        api.get('/api/banners')
       ]);
       
       console.log('Posts fetched:', postsRes.data.posts); // Debug log
@@ -363,12 +357,8 @@ const Home = () => {
       chatMessage += `\n\n🔗 View full post: ${postUrl}`;
       
       // Send the message to the college chat
-      const response = await axios.post(`/api/chat/college/${userProfile.college_id}/text`, {
+      const response = await api.post(`/api/chat/college/${userProfile.college_id}/text`, {
         content: chatMessage
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
       });
       
       if (response.status === 201) {
@@ -398,11 +388,7 @@ const Home = () => {
     try {
       console.log('Adding reaction:', { postId, reactionType }); // Debug log
       
-      const response = await axios.post(`/api/posts/${postId}/react`, { reaction_type: reactionType }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      const response = await api.post(`/api/posts/${postId}/react`, { reaction_type: reactionType });
       
       console.log('Reaction response:', response.data); // Debug log
       
@@ -476,11 +462,7 @@ const Home = () => {
         break;
       case 'save-post':
         try {
-          const response = await axios.post(`/api/posts/${postId}/save`, {}, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-          });
+          const response = await api.post(`/api/posts/${postId}/save`);
           if (response.status === 200) {
             toast.success('Post saved successfully!');
           }
