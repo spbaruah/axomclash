@@ -1,8 +1,8 @@
-// Utility function to convert relative image URLs to full backend URLs
+// Utility function to handle image URLs (both local and Cloudinary)
 export const getFullImageUrl = (imageUrl) => {
   if (!imageUrl) return '';
   
-  // If it's already a full URL, return as is
+  // If it's already a full URL (including Cloudinary), return as is
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
     return imageUrl;
   }

@@ -7,13 +7,13 @@
   "background_color": "#ffffff",
   "icons": [
     {
-      "src": "image/logo.png",
-      "sizes": "192x192",
+      "src": "image/logo2.png",
+      "sizes": "54x54",
       "type": "image/png"
     },
     {
       "src": "image/logo.png",
-      "sizes": "512x512",
+      "sizes": "83x83",
       "type": "image/png"
     }
   ]

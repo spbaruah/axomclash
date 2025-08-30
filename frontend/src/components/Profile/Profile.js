@@ -46,7 +46,7 @@ const Profile = () => {
       setLoadingPosts(true);
       // Fetch user's own posts; include token so private posts are included for owner
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/posts/user/${userProfile.id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/posts/user/${userProfile.id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       if (response.ok) {
@@ -135,7 +135,7 @@ const Profile = () => {
         }
       }
       
-      const response = await fetch('/api/posts/saved', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/posts/saved`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log('Saved posts response status:', response.status);
@@ -160,7 +160,7 @@ const Profile = () => {
   const handleUnsavePost = async (postId) => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/posts/${postId}/save`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/posts/${postId}/save`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

@@ -32,7 +32,17 @@ const BannerManagement = () => {
       setBanners(response.data.banners || []);
     } catch (error) {
       console.error('Error fetching banners:', error);
-      toast.error('Failed to fetch banners');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMessage = 'Failed to fetch banners';
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.details) {
+        errorMessage = `${errorMessage}: ${error.response.data.details}`;
+      }
+      
+      toast.error(errorMessage);
       setBanners([]); // Set empty array as fallback
     } finally {
       setLoading(false);

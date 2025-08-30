@@ -53,6 +53,50 @@ const verifyAdminToken = async (req, res, next) => {
   }
 };
 
+// Health check endpoint for banners
+router.get('/health', async (req, res) => {
+  try {
+    console.log('🏥 Banner health check requested');
+    
+    // Check database connection
+    if (!db) {
+      console.error('❌ Database connection not available');
+      return res.status(500).json({ 
+        status: 'unhealthy',
+        database: 'disconnected',
+        error: 'Database connection failed'
+      });
+    }
+    
+    // Test database query
+    const [result] = await db.promise().execute('SELECT 1 as test');
+    
+    if (result && result.length > 0) {
+      console.log('✅ Banner health check passed');
+      res.json({ 
+        status: 'healthy',
+        database: 'connected',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.error('❌ Database query test failed');
+      res.status(500).json({ 
+        status: 'unhealthy',
+        database: 'query_failed',
+        error: 'Database query test failed'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Banner health check failed:', error);
+    res.status(500).json({ 
+      status: 'unhealthy',
+      database: 'error',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
 // Get all active banners (public endpoint)
 router.get('/', async (req, res) => {
   try {
@@ -76,7 +120,11 @@ router.get('/', async (req, res) => {
     res.json({ banners: formattedBanners });
   } catch (error) {
     console.error('❌ Error fetching banners:', error);
-    res.status(500).json({ error: 'Failed to fetch banners' });
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to fetch banners',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
   }
  });
 
