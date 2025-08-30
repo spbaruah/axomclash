@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
+import api from '../../services/axios';
 import toast from 'react-hot-toast';
 import EmojiPicker from 'emoji-picker-react';
 import './Chat.css';
 
 const Chat = () => {
-  const { user, getAuthToken } = useAuth();
+  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -122,11 +122,8 @@ const Chat = () => {
   // Fetch chat messages
   const fetchMessages = useCallback(async () => {
     try {
-      setLoading(true);
-      const token = getAuthToken();
-      const response = await axios.get(`/api/chat/college/${user.college_id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+              setLoading(true);
+        const response = await api.get(`/api/chat/college/${user.college_id}`);
       setMessages(response.data.messages || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -134,16 +131,13 @@ const Chat = () => {
     } finally {
       setLoading(false);
     }
-  }, [user.college_id, getAuthToken]);
+  }, [user.college_id]);
 
   // Fetch online users
   const fetchOnlineUsers = useCallback(async () => {
     try {
-      setOnlineUsersLoading(true);
-      const token = getAuthToken();
-      const response = await axios.get(`/api/chat/college/${user.college_id}/online-users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+              setOnlineUsersLoading(true);
+        const response = await api.get(`/api/chat/college/${user.college_id}/online-users`);
       setOnlineUsers(response.data.onlineUsers || []);
     } catch (error) {
       console.error('Error fetching online users:', error);
@@ -151,20 +145,16 @@ const Chat = () => {
     } finally {
       setOnlineUsersLoading(false);
     }
-  }, [user.college_id, getAuthToken]);
+  }, [user.college_id]);
 
   // Update user online status
   const updateOnlineStatus = useCallback(async (isOnline) => {
     try {
-      const token = getAuthToken();
-      await axios.post('/api/chat/user/online-status', 
-        { isOnline }, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post('/api/chat/user/online-status', { isOnline });
     } catch (error) {
       console.error('Error updating online status:', error);
     }
-  }, [getAuthToken]);
+  }, []);
 
   // Send text message or update existing message
   const sendMessage = async () => {
@@ -178,14 +168,10 @@ const Chat = () => {
 
     try {
       setSending(true);
-      const token = getAuthToken();
-      const response = await axios.post(`/api/chat/college/${user.college_id}/text`, 
-        { 
-          content: newMessage.trim(),
-          replyToId: replyingTo?.id || null
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.post(`/api/chat/college/${user.college_id}/text`, { 
+        content: newMessage.trim(),
+        replyToId: replyingTo?.id || null
+      });
       
       // Add new message to the list
       setMessages(prev => [...prev, response.data.chatMessage]);
@@ -232,10 +218,7 @@ const Chat = () => {
   // Clear all chat messages
   const clearChat = async () => {
     try {
-      const token = getAuthToken();
-      const response = await axios.delete(`/api/chat/college/${user.college_id}/clear`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.delete(`/api/chat/college/${user.college_id}/clear`);
       
       // Clear messages from state
       setMessages([]);
@@ -286,12 +269,10 @@ const Chat = () => {
         formData.append('replyToId', replyingTo.id);
       }
 
-      const token = getAuthToken();
-      const response = await axios.post(`/api/chat/college/${user.college_id}/media`, 
+      const response = await api.post(`/api/chat/college/${user.college_id}/media`, 
         formData,
         { 
           headers: { 
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
           } 
         }
@@ -340,11 +321,7 @@ const Chat = () => {
 
     try {
       setSending(true);
-      const token = getAuthToken();
-      await axios.put(`/api/chat/message/${editingMessage.id}`, 
-        { content: newMessage.trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put(`/api/chat/message/${editingMessage.id}`, { content: newMessage.trim() });
       
       // Update message in state
       setMessages(prev => prev.map(msg => 
@@ -369,10 +346,7 @@ const Chat = () => {
   // Handle message deletion
   const handleDeleteMessage = async (messageId) => {
     try {
-      const token = getAuthToken();
-      await axios.delete(`/api/chat/message/${messageId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/api/chat/message/${messageId}`);
       
       // Remove message from state
       setMessages(prev => prev.filter(msg => msg.id !== messageId));
@@ -440,7 +414,6 @@ const Chat = () => {
   // Handle reaction toggling
   const handleReaction = async (messageId, reactionType) => {
     try {
-      const token = getAuthToken();
       const message = messages.find(m => m.id === messageId);
       
       if (!message) return;
@@ -450,10 +423,7 @@ const Chat = () => {
       
       if (hasReaction) {
         // Remove reaction
-        await axios.delete(`/api/chat/message/${messageId}/reaction`, {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { reaction: reactionType }
-        });
+                  await api.delete(`/api/chat/message/${messageId}/reaction`, { data: { reaction: reactionType } });
         
         // Update local state
         setMessages(prev => prev.map(msg => {
@@ -476,10 +446,7 @@ const Chat = () => {
         }));
       } else {
         // Add reaction
-        await axios.post(`/api/chat/message/${messageId}/reaction`, 
-          { reaction: reactionType },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+                  await api.post(`/api/chat/message/${messageId}/reaction`, { reaction: reactionType });
         
         // Update local state - handle the case where user might have had a different reaction
         setMessages(prev => prev.map(msg => {
