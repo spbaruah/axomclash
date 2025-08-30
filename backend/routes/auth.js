@@ -6,6 +6,7 @@ const db = require('../config/database');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { getStorage, deleteFile } = require('../config/cloudinary');
 const router = express.Router();
 
 // Middleware to verify JWT token (defined before route usage)
@@ -24,21 +25,9 @@ const verifyToken = async (req, res, next) => {
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
-// Multer storage for cover photos
-const coverStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../uploads/covers');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, 'cover-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Multer storage for cover photos using Cloudinary
 const coverUpload = multer({
-  storage: coverStorage,
+  storage: getStorage('covers'),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
@@ -47,21 +36,9 @@ const coverUpload = multer({
   }
 });
 
-// Multer storage for profile pictures
-const profileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../uploads/profiles');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Multer storage for profile pictures using Cloudinary
 const profileUpload = multer({
-  storage: profileStorage,
+  storage: getStorage('profiles'),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
@@ -83,16 +60,15 @@ router.put('/profile-picture', verifyToken, profileUpload.single('avatar'), asyn
     const [rows] = await db.promise().query('SELECT profile_picture FROM users WHERE id = ?', [userId]);
     const oldPath = rows && rows[0] && rows[0].profile_picture;
 
-    const relativePath = `/uploads/profiles/${req.file.filename}`.replace(/\\/g, '/');
-    await db.promise().query('UPDATE users SET profile_picture = ? WHERE id = ?', [relativePath, userId]);
+    const imageUrl = req.file.path; // Cloudinary returns the URL in file.path
+    await db.promise().query('UPDATE users SET profile_picture = ? WHERE id = ?', [imageUrl, userId]);
 
-    // Attempt to delete old image
+    // Attempt to delete old image from Cloudinary
     if (oldPath) {
-      const fileOnDisk = path.join(__dirname, '..', oldPath.replace(/^\/?uploads\//, 'uploads/'));
       try {
-        if (fs.existsSync(fileOnDisk)) fs.unlinkSync(fileOnDisk);
+        await deleteFile(oldPath);
       } catch (e) {
-        console.warn('Failed to delete old profile image:', e.message);
+        console.warn('Failed to delete old profile image from Cloudinary:', e.message);
       }
     }
 
@@ -137,10 +113,10 @@ router.put('/cover', verifyToken, coverUpload.single('cover'), async (req, res) 
     }
 
     const userId = req.user.userId;
-    const relativePath = `/uploads/covers/${req.file.filename}`.replace(/\\/g, '/');
+    const imageUrl = req.file.path; // Cloudinary returns the URL in file.path
 
     await db.promise().query(
-      'UPDATE users SET cover_photo = ? WHERE id = ?',[relativePath, userId]
+      'UPDATE users SET cover_photo = ? WHERE id = ?',[imageUrl, userId]
     );
 
     res.json({ message: 'Cover photo updated', cover_photo: relativePath });

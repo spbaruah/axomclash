@@ -1,22 +1,12 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
 const db = require('../config/database');
+const { getStorage } = require('../config/cloudinary');
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/banners/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'banner-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Configure multer for Cloudinary uploads
 const upload = multer({
-  storage: storage,
+  storage: getStorage('banners'),
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
   },
@@ -114,7 +104,7 @@ router.post('/', verifyAdminToken, upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'Image file is required' });
     }
 
-    const image_url = `/uploads/banners/${req.file.filename}`;
+    const image_url = req.file.path; // Cloudinary returns the URL in file.path
 
     const [result] = await db.promise().execute(
       `INSERT INTO banners (title, description, image_url, cta_text, cta_link, display_order, is_active) 

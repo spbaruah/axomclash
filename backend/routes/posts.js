@@ -1,22 +1,12 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
 const db = require('../config/database');
+const { getStorage, deleteFile } = require('../config/cloudinary');
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/posts/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Configure multer for Cloudinary uploads
 const upload = multer({ 
-  storage: storage,
+  storage: getStorage('posts'),
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
   },
@@ -414,7 +404,7 @@ router.post('/upload', verifyToken, upload.array('media', 5), async (req, res) =
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
-    const uploadedFiles = req.files.map(file => `/uploads/posts/${file.filename}`);
+    const uploadedFiles = req.files.map(file => file.path); // Cloudinary returns the URL in file.path
     
     res.json({ 
       success: true, 
@@ -448,7 +438,7 @@ router.post('/', verifyToken, upload.array('media', 5), async (req, res) => {
     // Process uploaded files
     let mediaUrls = [];
     if (req.files && req.files.length > 0) {
-      mediaUrls = req.files.map(file => `uploads/posts/${file.filename}`);
+      mediaUrls = req.files.map(file => file.path); // Cloudinary returns the URL in file.path
     }
 
     console.log('Creating post with media_urls:', mediaUrls);

@@ -1,24 +1,11 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const db = require('../config/database');
+const { getStorage } = require('../config/cloudinary');
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../uploads/chat');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure multer for Cloudinary uploads
+const storage = getStorage('chat');
 
 const fileFilter = (req, file, cb) => {
   // Allow images and videos only
@@ -341,7 +328,7 @@ router.post('/college/:collegeId/media', verifyToken, upload.single('media'), as
       }
     }
 
-    const mediaUrl = `/uploads/chat/${req.file.filename}`;
+    const mediaUrl = req.file.path; // Cloudinary returns the URL in file.path
     console.log('Media URL to be stored:', mediaUrl);
 
     const [result] = await db.promise().execute(
