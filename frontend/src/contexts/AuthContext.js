@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../services/axios';
 import toast from 'react-hot-toast';
 
 // Auth Context
@@ -78,11 +78,7 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Regular user authentication
-      const response = await axios.get('/api/auth/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await api.get('/api/auth/profile');
       
       setUser(response.data.user);
       setUserProfile(response.data.user);
@@ -104,7 +100,7 @@ export const AuthProvider = ({ children }) => {
   // Register user
   const registerUser = async (userData) => {
     try {
-      const response = await axios.post('/api/auth/register', userData);
+      const response = await api.post('/api/auth/register', userData);
       
       const { user, token } = response.data;
       setUser(user);
@@ -124,7 +120,7 @@ export const AuthProvider = ({ children }) => {
   // Login user
   const loginUser = async (email, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password });
       
       const { user, token, isAdmin } = response.data;
       
@@ -166,11 +162,7 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (updates) => {
     try {
       const token = localStorage.getItem('authToken');
-      await axios.put('/api/auth/profile', updates, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      await api.put('/api/auth/profile', updates);
       
       // Update local state
       setUserProfile(prev => ({ ...prev, ...updates }));
@@ -191,12 +183,7 @@ export const AuthProvider = ({ children }) => {
       const formData = new FormData();
       formData.append('cover', file);
 
-      const response = await axios.put('/api/auth/cover', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const response = await api.put('/api/auth/cover', formData);
 
       const { cover_photo } = response.data;
       setUserProfile(prev => ({ ...prev, cover_photo }));
@@ -214,11 +201,7 @@ export const AuthProvider = ({ children }) => {
   const deleteCoverPhoto = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete('/api/auth/cover', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      await api.delete('/api/auth/cover');
       setUserProfile(prev => ({ ...prev, cover_photo: null }));
       setUser(prev => ({ ...prev, cover_photo: null }));
       toast.success('Cover photo removed');
@@ -236,12 +219,7 @@ export const AuthProvider = ({ children }) => {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await axios.put('/api/auth/profile-picture', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const response = await api.put('/api/auth/profile-picture', formData);
 
       const { profile_picture } = response.data;
       setUserProfile(prev => ({ ...prev, profile_picture }));
@@ -259,11 +237,7 @@ export const AuthProvider = ({ children }) => {
   const deleteProfilePicture = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete('/api/auth/profile-picture', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      await api.delete('/api/auth/profile-picture');
       setUserProfile(prev => ({ ...prev, profile_picture: null }));
       setUser(prev => ({ ...prev, profile_picture: null }));
       toast.success('Profile photo removed');
@@ -280,11 +254,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('authToken');
       if (token) {
-        await axios.post('/api/auth/logout', {}, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        await api.post('/api/auth/logout');
       }
     } catch (error) {
       console.error('Logout error:', error);

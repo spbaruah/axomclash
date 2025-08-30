@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
+import api from '../../services/axios';
 import toast from 'react-hot-toast';
 
 // Components
@@ -37,7 +37,7 @@ const Onboarding = () => {
     setCollegesError(false);
     
     try {
-      const response = await axios.get('/api/colleges');
+      const response = await api.get('/api/colleges');
       setColleges(response.data.colleges || []);
     } catch (error) {
       console.error('Error fetching colleges:', error);
