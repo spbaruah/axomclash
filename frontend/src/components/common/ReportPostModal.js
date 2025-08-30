@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../services/axios';
 import toast from 'react-hot-toast';
 import './ReportPostModal.css';
 
@@ -28,13 +28,9 @@ const ReportPostModal = ({ isOpen, onClose, postId, postContent }) => {
     setLoading(true);
     
     try {
-      const response = await axios.post(`/api/posts/${postId}/report`, {
+      const response = await api.post(`/api/posts/${postId}/report`, {
         reason,
         description: description.trim() || null
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
       });
 
       if (response.status === 200) {

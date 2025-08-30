@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaUser, FaEdit, FaTrophy, FaUsers, FaCalendar, FaMapMarkerAlt, FaBuilding, FaSignOutAlt, FaSave, FaTimes, FaStar, FaFire, FaMedal, FaCrown, FaCamera, FaHeart, FaComment, FaShare, FaBookmark, FaBan, FaArrowLeft } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import api from '../../services/axios';
 import './Profile.css';
 
 const Profile = () => {
@@ -90,10 +90,7 @@ const Profile = () => {
   const fetchBlockedUsers = async () => {
     try {
       setLoadingBlockedUsers(true);
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get('/api/users/blocked/list', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/users/blocked/list');
       setBlockedUsers(response.data.blockedUsers || []);
     } catch (error) {
       console.error('Error fetching blocked users:', error);
@@ -105,10 +102,7 @@ const Profile = () => {
 
   const unblockUser = async (userId) => {
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.delete(`/api/users/block/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/api/users/block/${userId}`);
       
       setBlockedUsers(prev => prev.filter(user => user.id !== userId));
       toast.success('User unblocked successfully');

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/axios';
 import './AutomatedChallenges.css';
 
 const AutomatedChallenges = () => {
@@ -21,10 +21,10 @@ const AutomatedChallenges = () => {
   const fetchProgress = async () => {
     try {
       const [progressRes, dailyRes, weeklyRes, monthlyRes] = await Promise.all([
-        axios.get('/api/automated-challenges/progress'),
-        axios.get('/api/automated-challenges/progress/daily/' + new Date().toISOString().split('T')[0]),
-        axios.get('/api/automated-challenges/progress/weekly'),
-        axios.get('/api/automated-challenges/progress/monthly')
+        api.get('/api/automated-challenges/progress'),
+        api.get('/api/automated-challenges/progress/daily/' + new Date().toISOString().split('T')[0]),
+        api.get('/api/automated-challenges/progress/weekly'),
+        api.get('/api/automated-challenges/progress/monthly')
       ]);
 
       setProgress(progressRes.data.progress);
@@ -40,7 +40,7 @@ const AutomatedChallenges = () => {
 
   const fetchAchievements = async () => {
     try {
-      const response = await axios.get('/api/automated-challenges/achievements');
+      const response = await api.get('/api/automated-challenges/achievements');
       setAchievements(response.data.achievements);
     } catch (error) {
       console.error('Error fetching achievements:', error);
@@ -49,7 +49,7 @@ const AutomatedChallenges = () => {
 
   const fetchStreaks = async () => {
     try {
-      const response = await axios.get('/api/automated-challenges/streaks');
+      const response = await api.get('/api/automated-challenges/streaks');
       setStreaks(response.data.streaks);
     } catch (error) {
       console.error('Error fetching streaks:', error);

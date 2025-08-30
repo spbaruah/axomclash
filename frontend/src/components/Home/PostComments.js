@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/axios';
 import toast from 'react-hot-toast';
 import { FaComment, FaHeart, FaReply, FaTimes, FaUser, FaPaperPlane } from 'react-icons/fa';
 import './PostComments.css';
@@ -26,11 +26,7 @@ const PostComments = ({ postId, isOpen, onClose, onCommentAdded }) => {
   const fetchComments = async () => {
     try {
       setCommentsLoading(true);
-      const response = await axios.get(`/api/posts/${postId}/comments`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      const response = await api.get(`/api/posts/${postId}/comments`);
       setComments(response.data.comments || []);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -46,13 +42,9 @@ const PostComments = ({ postId, isOpen, onClose, onCommentAdded }) => {
 
     try {
       setLoading(true);
-      const response = await axios.post(`/api/posts/${postId}/comments`, {
+      const response = await api.post(`/api/posts/${postId}/comments`, {
         content: newComment.trim(),
         parent_id: null
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
       });
 
       const newCommentData = response.data.comment;
@@ -78,13 +70,9 @@ const PostComments = ({ postId, isOpen, onClose, onCommentAdded }) => {
 
     try {
       setLoading(true);
-      const response = await axios.post(`/api/posts/${postId}/comments`, {
+      const response = await api.post(`/api/posts/${postId}/comments`, {
         content: replyText.trim(),
         parent_id: replyTo.id
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
       });
 
       const newReplyData = response.data.comment;
@@ -107,11 +95,7 @@ const PostComments = ({ postId, isOpen, onClose, onCommentAdded }) => {
 
   const handleLikeComment = async (commentId) => {
     try {
-      await axios.post(`/api/comments/${commentId}/like`, {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      await api.post(`/api/comments/${commentId}/like`);
 
       setComments(prev => prev.map(comment => 
         comment.id === commentId 

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaUser, FaTrophy, FaUsers, FaCalendar, FaMapMarkerAlt, FaBuilding, FaArrowLeft, FaHeart, FaComment, FaShare, FaEllipsisV } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
+import api from '../../services/axios';
 import toast from 'react-hot-toast';
 import PostComments from '../Home/PostComments';
 import ReportPostModal from '../common/ReportPostModal';
@@ -47,14 +47,9 @@ const UserProfile = () => {
     if (!userProfile?.id || !userId) return;
     
     try {
-      const token = localStorage.getItem('authToken');
       const [blockCheckRes, blockedByCheckRes] = await Promise.all([
-        axios.get(`/api/users/blocked/check/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`/api/users/blocked/by/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        api.get(`/api/users/blocked/check/${userId}`),
+        api.get(`/api/users/blocked/by/${userId}`)
       ]);
       
       setIsBlocked(blockCheckRes.data.isBlocked);
@@ -67,10 +62,7 @@ const UserProfile = () => {
   // Block user function
   const blockUser = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.post(`/api/users/block/${userId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post(`/api/users/block/${userId}`);
       
       setIsBlocked(true);
       toast.success('User blocked successfully');
@@ -83,10 +75,7 @@ const UserProfile = () => {
   // Unblock user function
   const unblockUser = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.delete(`/api/users/block/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/api/users/block/${userId}`);
       
       setIsBlocked(false);
       toast.success('User unblocked successfully');
@@ -244,11 +233,7 @@ const UserProfile = () => {
 
   const handlePostReaction = async (postId, reactionType) => {
     try {
-      const response = await axios.post(`/api/posts/${postId}/react`, { reaction_type: reactionType }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      const response = await api.post(`/api/posts/${postId}/react`, { reaction_type: reactionType });
       
       // Update local state based on the response
       setUserPosts(prevPosts => 
@@ -315,24 +300,20 @@ const UserProfile = () => {
       case 'view-profile':
         window.location.href = `/profile/${userId}`;
         break;
-      case 'save-post':
-        try {
-          const response = await axios.post(`/api/posts/${postId}/save`, {}, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+              case 'save-post':
+          try {
+            const response = await api.post(`/api/posts/${postId}/save`);
+            if (response.status === 200) {
+              toast.success('Post saved successfully!');
             }
-          });
-          if (response.status === 200) {
-            toast.success('Post saved successfully!');
+          } catch (error) {
+            if (error.response?.status === 400 && error.response?.data?.error === 'Post already saved') {
+              toast.error('Post is already saved!');
+            } else {
+              toast.error('Failed to save post. Please try again.');
+            }
           }
-        } catch (error) {
-          if (error.response?.status === 400 && error.response?.data?.error === 'Post already saved') {
-            toast.error('Post is already saved!');
-          } else {
-            toast.error('Failed to save post. Please try again.');
-          }
-        }
-        break;
+          break;
       case 'report-post':
         const postToReport = userPosts.find(p => p.id === postId);
         if (postToReport) {
@@ -442,12 +423,8 @@ const UserProfile = () => {
       
       chatMessage += `\n\n🔗 View full post: ${postUrl}`;
       
-      const response = await axios.post(`/api/chat/college/${userProfile.college_id}/text`, {
+      const response = await api.post(`/api/chat/college/${userProfile.college_id}/text`, {
         content: chatMessage
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
       });
       
       if (response.status === 201) {
