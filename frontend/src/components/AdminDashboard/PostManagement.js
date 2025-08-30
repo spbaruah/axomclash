@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './PostManagement.css';
-import { API_URL } from '../../services/api';
+import api from '../../services/axios';
 
 const PostManagement = () => {
   const [posts, setPosts] = useState([]);
@@ -12,17 +12,8 @@ const PostManagement = () => {
 
   const fetchPosts = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_URL}/api/admin/posts`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setPosts(data);
-      }
+      const response = await api.get('/api/admin/posts');
+      setPosts(response.data);
     } catch (error) {
       console.error('Error fetching posts:', error);
       // Mock data for demo

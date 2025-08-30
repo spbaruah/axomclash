@@ -95,7 +95,7 @@ const AdminDashboard = () => {
       <header className="admin-header">
         <div className="admin-header-left">
           <div className="admin-logo">
-            <img src="/image/logo.png" alt="CampusClash Logo" className="admin-logo-image" />
+            <img src="image/logo.png" alt="CampusClash Logo" className="admin-logo-image" />
           </div>
           <span className="admin-role">{adminData?.role || 'Admin'}</span>
         </div>

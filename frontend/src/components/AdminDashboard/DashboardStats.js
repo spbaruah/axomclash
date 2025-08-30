@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DashboardStats.css';
-import { API_URL } from '../../services/api';
+import api from '../../services/axios';
 
 const DashboardStats = () => {
   const [stats, setStats] = useState({
@@ -22,17 +22,8 @@ const DashboardStats = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_URL}/api/admin/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
+      const response = await api.get('/api/admin/stats');
+      setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
       // Set mock data for demo
@@ -52,17 +43,8 @@ const DashboardStats = () => {
 
   const fetchRecentActivity = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_URL}/api/admin/recent-activity`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setRecentActivity(data);
-      }
+      const response = await api.get('/api/admin/recent-activity');
+      setRecentActivity(response.data);
     } catch (error) {
       console.error('Error fetching recent activity:', error);
       // Set mock data for demo
