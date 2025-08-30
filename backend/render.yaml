@@ -21,12 +21,19 @@ services:
       - key: MYSQL_ADDON_PASSWORD
         value: zC08nyi3MEVOfI3EisgE
       - key: MYSQL_ADDON_URI
-        value: mysql://u4ipbi08elhoxmsz:zC08nyi3MEVOfI3EisgE@begr5npk9smo955afrh3-mysql.services.clever-cloud.com:3306/begr5npk9smo955afrh3
+        value: mysql://u4ipbi08elhoxmsz:zC08nyi3MEVOfI3EisgE@begr5npk9smo955afrh3-mysql.services.clever-cloud.com:begr5npk9smo955afrh3
       - key: CLIENT_URL
-        value: https://your-frontend-domain.netlify.app
+        value: https://axomclash.netlify.app
       - key: RATE_LIMIT_WINDOW_MS
         value: 60000
       - key: RATE_LIMIT_MAX_REQUESTS
         value: 1000
+      # Cloudinary Configuration - REQUIRED FOR PHOTO UPLOADS
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ddjsd5hqu
+      - key: CLOUDINARY_API_KEY
+        value: 494197416425811
+      - key: CLOUDINARY_API_SECRET
+        value: EDF6rzuxvi0eCd7XF00XrCZCKO0
     healthCheckPath: /api/health
     autoDeploy: true
