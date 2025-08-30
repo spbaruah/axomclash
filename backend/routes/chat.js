@@ -194,7 +194,7 @@ router.get('/college/:collegeId', verifyToken, async (req, res) => {
     
     const [countResult] = await db.promise().execute(
       countQuery,
-      [collegeId]
+      countParams
     );
 
     // Attach reactions to messages
