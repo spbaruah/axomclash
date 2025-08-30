@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import adminApi from '../../services/adminAxios';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaUpload, FaArrowsAlt } from 'react-icons/fa';
 import './BannerManagement.css';
@@ -28,15 +28,12 @@ const BannerManagement = () => {
   const fetchBanners = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/banners/admin', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
-      setBanners(response.data.banners);
+      const response = await adminApi.get('/api/banners/admin');
+      setBanners(response.data.banners || []);
     } catch (error) {
       console.error('Error fetching banners:', error);
       toast.error('Failed to fetch banners');
+      setBanners([]); // Set empty array as fallback
     } finally {
       setLoading(false);
     }
@@ -87,17 +84,15 @@ const BannerManagement = () => {
       }
 
       if (editingBanner) {
-        await axios.put(`/api/banners/${editingBanner.id}`, formDataToSend, {
+        await adminApi.put(`/api/banners/${editingBanner.id}`, formDataToSend, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
             'Content-Type': 'multipart/form-data'
           }
         });
         toast.success('Banner updated successfully!');
       } else {
-        await axios.post('/api/banners', formDataToSend, {
+        await adminApi.post('/api/banners', formDataToSend, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
             'Content-Type': 'multipart/form-data'
           }
         });
@@ -129,28 +124,20 @@ const BannerManagement = () => {
 
   const handleDelete = async (bannerId) => {
     if (window.confirm('Are you sure you want to delete this banner?')) {
-      try {
-        await axios.delete(`/api/banners/${bannerId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-          }
-        });
-        toast.success('Banner deleted successfully!');
-        fetchBanners();
-      } catch (error) {
-        console.error('Error deleting banner:', error);
-        toast.error('Failed to delete banner');
-      }
+          try {
+      await adminApi.delete(`/api/banners/${bannerId}`);
+      toast.success('Banner deleted successfully!');
+      fetchBanners();
+    } catch (error) {
+      console.error('Error deleting banner:', error);
+      toast.error('Failed to delete banner');
+    }
     }
   };
 
   const handleToggleStatus = async (bannerId) => {
     try {
-      await axios.patch(`/api/banners/${bannerId}/toggle`, {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
+      await adminApi.patch(`/api/banners/${bannerId}/toggle`, {});
       toast.success('Banner status updated!');
       fetchBanners();
     } catch (error) {
@@ -166,11 +153,7 @@ const BannerManagement = () => {
         display_order: banner.id === bannerId ? newOrder : banner.display_order
       }));
 
-      await axios.post('/api/banners/reorder', { bannerOrders }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
+      await adminApi.post('/api/banners/reorder', { bannerOrders });
       
       fetchBanners();
     } catch (error) {
