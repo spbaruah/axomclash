@@ -168,7 +168,7 @@ router.put('/:id', verifyAdminToken, upload.single('image'), async (req, res) =>
 
     // Handle image upload if provided
     if (req.file) {
-      image_url = `/uploads/banners/${req.file.filename}`;
+      image_url = req.file.path; // Cloudinary returns the URL in file.path
       updateFields.push('image_url = ?');
       updateValues.push(image_url);
     }
