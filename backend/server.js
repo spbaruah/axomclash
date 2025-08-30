@@ -110,7 +110,14 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/games/ludo-rooms', ludoRoomsRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/banners', bannerRoutes);
+
+// Add debugging for banner routes
+console.log('🔧 Registering banner routes at /api/banners');
+app.use('/api/banners', (req, res, next) => {
+  console.log(`📡 Banner route accessed: ${req.method} ${req.path}`);
+  console.log('📋 Request headers:', req.headers);
+  next();
+}, bannerRoutes);
 
   // Health check
   app.get('/api/health', (req, res) => {
