@@ -428,11 +428,16 @@ router.post('/upload', verifyToken, upload.array('media', 5), async (req, res) =
 });
 
 // Create a new post
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, upload.array('media', 5), async (req, res) => {
   try {
-    const { type, content, media_urls, poll_options, visibility = 'public' } = req.body;
+    const { type, content, poll_options, visibility = 'public' } = req.body;
     const userId = req.user.userId;
     const collegeId = req.user.college_id;
+
+    // Validate required fields
+    if (!type || !content) {
+      return res.status(400).json({ error: 'Type and content are required' });
+    }
 
     // Validate visibility
     const validVisibility = ['public', 'college_only', 'private'];
@@ -440,11 +445,17 @@ router.post('/', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Invalid visibility setting' });
     }
 
-    console.log('Creating post with media_urls:', media_urls);
+    // Process uploaded files
+    let mediaUrls = [];
+    if (req.files && req.files.length > 0) {
+      mediaUrls = req.files.map(file => `uploads/posts/${file.filename}`);
+    }
+
+    console.log('Creating post with media_urls:', mediaUrls);
     const [result] = await db.promise().query(
       `INSERT INTO posts (user_id, college_id, type, content, media_urls, poll_options, visibility) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [userId, collegeId, type, content, JSON.stringify(media_urls), JSON.stringify(poll_options), visibility]
+      [userId, collegeId, type, content, JSON.stringify(mediaUrls), JSON.stringify(poll_options), visibility]
     );
 
 
