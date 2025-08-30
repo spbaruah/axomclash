@@ -86,7 +86,6 @@ const Chat = () => {
     if (user?.college_id) {
       fetchMessages();
       fetchOnlineUsers();
-      startTypingListener();
       // Mark user as online when chat loads
       updateOnlineStatus(true);
     }

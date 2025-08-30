@@ -111,17 +111,14 @@ const Games = () => {
   };
 
   const handleGameUpdate = (data) => {
-    setGameState(data);
     toast.success('Game updated!');
   };
 
   const handleGameStart = (data) => {
-    setGameState(data);
     toast.success('Game started!');
   };
 
   const handleGameEnd = (data) => {
-    setGameState(data);
     toast.success('Game ended!');
     fetchGames(); // Refresh games list
   };

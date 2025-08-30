@@ -156,9 +156,8 @@ const Home = () => {
       
       console.log('Posts with reactions:', postsWithReactions); // Debug log
       
-      // Process college rankings
+      // Process college rankings (removed setCollegeRankings call)
       const rankings = collegesRes.data.colleges || [];
-      setCollegeRankings(rankings);
 
 
 
