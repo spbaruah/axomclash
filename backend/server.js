@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === 'production') {
 
 const io = socketIo(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
     methods: ["GET", "POST"]
   },
   pingTimeout: 60000,
@@ -51,25 +51,8 @@ const db = require('./config/database');
 app.use(helmet());
 app.use(compression());
 app.use(morgan('combined'));
-// CORS configuration - allow multiple origins
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://axomclash.netlify.app",
-  process.env.CLIENT_URL
-].filter(Boolean); // Remove undefined values
-
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
   credentials: true
 }));
 
