@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { FaGamepad, FaUsers, FaPlay, FaClock, FaStar, FaDice, FaBrain, FaSpinner, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
@@ -123,11 +123,11 @@ const Games = () => {
   //   toast.success('Game started!');
   // };
 
-  const handleGameEnd = (data) => {
+  const handleGameEnd = useCallback((data) => {
     // setGameState(data);
     toast.success('Game ended!');
     fetchGames(); // Refresh games list
-  };
+  }, []);
 
   const handlePlayerJoined = (data) => {
     setWaitingPlayers(prev => [...prev, data.player]);

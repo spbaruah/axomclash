@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaEdit, FaTrophy, FaUsers, FaCalendar, FaMapMarkerAlt, FaSignOutAlt, FaSave, FaTimes, FaCamera, FaHeart, FaComment, FaShare, FaBookmark, FaBan, FaArrowLeft } from 'react-icons/fa';
@@ -26,22 +26,7 @@ const Profile = () => {
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [loadingBlockedUsers, setLoadingBlockedUsers] = useState(false);
 
-  // Fetch user posts and saved posts
-  useEffect(() => {
-    console.log('Profile useEffect triggered, userProfile:', userProfile);
-    console.log('User profile ID:', userProfile?.id);
-    console.log('User profile username:', userProfile?.username);
-    if (userProfile?.id) {
-      console.log('User profile ID found, fetching posts and saved posts');
-      fetchUserPosts();
-      fetchSavedPosts();
-      fetchBlockedUsers();
-    } else {
-      console.log('No user profile ID found');
-    }
-  }, [userProfile?.id, fetchUserPosts, fetchSavedPosts, fetchBlockedUsers]);
-
-  const fetchUserPosts = async () => {
+  const fetchUserPosts = useCallback(async () => {
     try {
       setLoadingPosts(true);
       // Fetch user's own posts; include token so private posts are included for owner
@@ -85,40 +70,9 @@ const Profile = () => {
     } finally {
       setLoadingPosts(false);
     }
-  };
+  }, [userProfile?.id]);
 
-  const fetchBlockedUsers = async () => {
-    try {
-      setLoadingBlockedUsers(true);
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get('/api/users/blocked/list', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBlockedUsers(response.data.blockedUsers || []);
-    } catch (error) {
-      console.error('Error fetching blocked users:', error);
-      setBlockedUsers([]);
-    } finally {
-      setLoadingBlockedUsers(false);
-    }
-  };
-
-  const unblockUser = async (userId) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      await axios.delete(`/api/users/block/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setBlockedUsers(prev => prev.filter(user => user.id !== userId));
-      toast.success('User unblocked successfully');
-    } catch (error) {
-      console.error('Error unblocking user:', error);
-      toast.error(error.response?.data?.error || 'Failed to unblock user');
-    }
-  };
-
-  const fetchSavedPosts = async () => {
+  const fetchSavedPosts = useCallback(async () => {
     try {
       setLoadingSavedPosts(true);
       const token = localStorage.getItem('authToken');
@@ -135,25 +89,64 @@ const Profile = () => {
         }
       }
       
-      const response = await fetch('/api/posts/saved', {
+      const response = await axios.get('/api/posts/saved', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('Saved posts response status:', response.status);
-      console.log('Saved posts response headers:', response.headers);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Saved posts data:', data);
-        console.log('Saved posts array length:', data.savedPosts ? data.savedPosts.length : 'undefined');
-        setSavedPosts(data.savedPosts || []);
+      if (response.data.success) {
+        setSavedPosts(response.data.savedPosts || []);
+        console.log('Saved posts fetched:', response.data.savedPosts);
       } else {
-        const errorText = await response.text();
-        console.error('Failed to fetch saved posts:', response.status, response.statusText, errorText);
+        console.log('No saved posts found or error in response');
+        setSavedPosts([]);
       }
     } catch (error) {
       console.error('Error fetching saved posts:', error);
+      setSavedPosts([]);
     } finally {
       setLoadingSavedPosts(false);
+    }
+  }, []);
+
+  const fetchBlockedUsers = useCallback(async () => {
+    try {
+      setLoadingBlockedUsers(true);
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('/api/users/blocked/list', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBlockedUsers(response.data.blockedUsers || []);
+    } catch (error) {
+      console.error('Error fetching blocked users:', error);
+      setBlockedUsers([]);
+    } finally {
+      setLoadingBlockedUsers(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (userProfile?.id) {
+      console.log('User profile ID found, fetching posts and saved posts');
+      fetchUserPosts();
+      fetchSavedPosts();
+      fetchBlockedUsers();
+    } else {
+      console.log('No user profile ID found');
+    }
+  }, [userProfile?.id, fetchUserPosts, fetchSavedPosts, fetchBlockedUsers]);
+
+  const unblockUser = async (userId) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.delete(`/api/users/block/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setBlockedUsers(prev => prev.filter(user => user.id !== userId));
+      toast.success('User unblocked successfully');
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      toast.error(error.response?.data?.error || 'Failed to unblock user');
     }
   };
 

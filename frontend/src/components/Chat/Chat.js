@@ -81,12 +81,58 @@ const Chat = () => {
     };
   }, [showHeaderMenu, showEmojiPicker, showMediaOptions, showMessageMenu, showReactionBar]);
 
-  // Fetch messages when component mounts or college changes
+  // Fetch chat messages
+  const fetchMessages = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
+      const response = await axios.get(`/api/chat/college/${user.college_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMessages(response.data.messages || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      toast.error('Failed to load messages');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.college_id]);
+
+  // Fetch online users
+  const fetchOnlineUsers = useCallback(async () => {
+    try {
+      setOnlineUsersLoading(true);
+      const token = getAuthToken();
+      const response = await axios.get(`/api/chat/college/${user.college_id}/online-users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setOnlineUsers(response.data.onlineUsers || []);
+    } catch (error) {
+      console.error('Error fetching online users:', error);
+      // Don't show error toast for this as it's not critical
+    } finally {
+      setOnlineUsersLoading(false);
+    }
+  }, [user?.college_id]);
+
+  // Update user online status
+  const updateOnlineStatus = useCallback(async (isOnline) => {
+    try {
+      const token = getAuthToken();
+      await axios.post('/api/chat/user/online-status', 
+        { isOnline }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (error) {
+      console.error('Error updating online status:', error);
+    }
+  }, []);
+
+  // Initialize chat when component mounts
   useEffect(() => {
     if (user?.college_id) {
       fetchMessages();
       fetchOnlineUsers();
-      startTypingListener();
       // Mark user as online when chat loads
       updateOnlineStatus(true);
     }
@@ -119,53 +165,6 @@ const Chat = () => {
       };
     }
   }, [user?.college_id, updateOnlineStatus]);
-
-  // Fetch chat messages
-  const fetchMessages = async () => {
-    try {
-      setLoading(true);
-      const token = getAuthToken();
-      const response = await axios.get(`/api/chat/college/${user.college_id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMessages(response.data.messages || []);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      toast.error('Failed to load messages');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch online users
-  const fetchOnlineUsers = async () => {
-    try {
-      setOnlineUsersLoading(true);
-      const token = getAuthToken();
-      const response = await axios.get(`/api/chat/college/${user.college_id}/online-users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setOnlineUsers(response.data.onlineUsers || []);
-    } catch (error) {
-      console.error('Error fetching online users:', error);
-      // Don't show error toast for this as it's not critical
-    } finally {
-      setOnlineUsersLoading(false);
-    }
-  };
-
-  // Update user online status
-  const updateOnlineStatus = async (isOnline) => {
-    try {
-      const token = getAuthToken();
-      await axios.post('/api/chat/user/online-status', 
-        { isOnline }, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (error) {
-      console.error('Error updating online status:', error);
-    }
-  };
 
   // Send text message or update existing message
   const sendMessage = async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -17,13 +17,7 @@ const PostComments = ({ postId, isOpen, onClose, onCommentAdded }) => {
   const [loading, setLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && postId) {
-      fetchComments();
-    }
-  }, [isOpen, postId, fetchComments]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       setCommentsLoading(true);
       const response = await axios.get(`/api/posts/${postId}/comments`, {
@@ -38,7 +32,13 @@ const PostComments = ({ postId, isOpen, onClose, onCommentAdded }) => {
     } finally {
       setCommentsLoading(false);
     }
-  };
+  }, [postId]);
+
+  useEffect(() => {
+    if (isOpen && postId) {
+      fetchComments();
+    }
+  }, [isOpen, postId, fetchComments]);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();

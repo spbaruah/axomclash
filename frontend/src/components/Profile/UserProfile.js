@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaUser, FaTrophy, FaUsers, FaCalendar, FaArrowLeft, FaHeart, FaComment, FaShare, FaEllipsisV } from 'react-icons/fa';
@@ -34,16 +34,62 @@ const UserProfile = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostForReport, setSelectedPostForReport] = useState(null);
 
-  useEffect(() => {
-    if (userId) {
-      fetchUserProfile();
-      fetchUserPosts();
-      checkBlockStatus();
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/users/${userId}`);
+      if (!response.ok) {
+        throw new Error('User not found');
+      }
+      const data = await response.json();
+      setUser(data.user);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setError('Failed to load user profile');
     }
-  }, [userId, fetchUserProfile, fetchUserPosts, checkBlockStatus]);
+  }, [userId]);
 
-  // Check block status between current user and profile user
-  const checkBlockStatus = async () => {
+  const fetchUserPosts = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/posts/user/${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const posts = Array.isArray(data) ? data : data.posts || [];
+        
+        // Process posts to include reaction data
+        const postsWithReactions = posts.map(post => ({
+          ...post,
+          user: {
+            username: user?.username || 'Anonymous',
+            profile_picture: user?.profile_picture,
+            college_name: user?.college_name
+          },
+          love_count: post.love_count || 0,
+          laugh_count: post.laugh_count || 0,
+          fire_count: post.fire_count || 0,
+          clap_count: post.clap_count || 0,
+          wow_count: post.wow_count || 0,
+          sad_count: post.sad_count || 0,
+          angry_count: post.angry_count || 0,
+          user_reaction: post.user_reaction || null,
+          likes_count: post.likes_count || 0,
+          comments_count: post.comments_count || 0,
+          shares_count: post.shares_count || 0
+        }));
+        
+        setUserPosts(postsWithReactions);
+      }
+    } catch (error) {
+      console.error('Error fetching user posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, user]);
+
+  const checkBlockStatus = useCallback(async () => {
     if (!userProfile?.id || !userId) return;
     
     try {
@@ -62,7 +108,15 @@ const UserProfile = () => {
     } catch (error) {
       console.error('Error checking block status:', error);
     }
-  };
+  }, [userProfile?.id, userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserProfile();
+      fetchUserPosts();
+      checkBlockStatus();
+    }
+  }, [userId, fetchUserProfile, fetchUserPosts, checkBlockStatus]);
 
   // Block user function
   const blockUser = async () => {
@@ -116,61 +170,6 @@ const UserProfile = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  const fetchUserProfile = async () => {
-    try {
-      const response = await fetch(`/api/users/${userId}`);
-      if (!response.ok) {
-        throw new Error('User not found');
-      }
-      const data = await response.json();
-      setUser(data.user);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setError('Failed to load user profile');
-    }
-  };
-
-  const fetchUserPosts = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/posts/user/${userId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const posts = Array.isArray(data) ? data : data.posts || [];
-        
-        // Process posts to include reaction data
-        const postsWithReactions = posts.map(post => ({
-          ...post,
-          user: {
-            username: user?.username || 'Anonymous',
-            profile_picture: user?.profile_picture,
-            college_name: user?.college_name
-          },
-          love_count: post.love_count || 0,
-          laugh_count: post.laugh_count || 0,
-          fire_count: post.fire_count || 0,
-          clap_count: post.clap_count || 0,
-          wow_count: post.wow_count || 0,
-          sad_count: post.sad_count || 0,
-          angry_count: post.angry_count || 0,
-          user_reaction: post.user_reaction || null,
-          likes_count: post.likes_count || 0,
-          comments_count: post.comments_count || 0,
-          shares_count: post.shares_count || 0
-        }));
-        
-        setUserPosts(postsWithReactions);
-      }
-    } catch (error) {
-      console.error('Error fetching user posts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

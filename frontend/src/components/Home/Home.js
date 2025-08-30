@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -15,7 +15,7 @@ const Home = () => {
   const { userProfile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  // const [collegeRankings, setCollegeRankings] = useState([]);
+  const [collegeRankings, setCollegeRankings] = useState([]);
 
   const [posts, setPosts] = useState([]);
   const [banners, setBanners] = useState([]);
@@ -89,44 +89,7 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    if (userProfile) {
-      fetchHomeData();
-    }
-  }, [userProfile, fetchHomeData]);
-
-  // Check for query parameter to open create post modal
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get('openCreatePost') === 'true') {
-      setShowCreatePost(true);
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [location.search]);
-
-  // Handle clicking outside reactions dropdown and post menu
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.reactions-container') && 
-          !event.target.closest('.post-menu-container')) {
-        setPosts(prevPosts => 
-          prevPosts.map(post => ({
-            ...post,
-            showReactions: false
-          }))
-        );
-        setShowPostMenu(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const fetchHomeData = async () => {
+  const fetchHomeData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -165,9 +128,7 @@ const Home = () => {
       
       // Process college rankings
       const rankings = collegesRes.data.colleges || [];
-      // setCollegeRankings(rankings);
-
-
+      setCollegeRankings(rankings);
 
       // Process posts (respect visibility settings)
       const allPosts = postsWithReactions;
@@ -205,7 +166,46 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userProfile]);
+
+  useEffect(() => {
+    if (userProfile) {
+      fetchHomeData();
+    }
+  }, [userProfile, fetchHomeData]);
+
+  // Check for query parameter to open create post modal
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('openCreatePost') === 'true') {
+      setShowCreatePost(true);
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location.search]);
+
+  // Handle clicking outside reactions dropdown and post menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.reactions-container') && 
+          !event.target.closest('.post-menu-container')) {
+        setPosts(prevPosts => 
+          prevPosts.map(post => ({
+            ...post,
+            showReactions: false
+          }))
+        );
+        setShowPostMenu(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+
 
 
 

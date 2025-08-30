@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTrophy, FaCrown, FaMedal, FaUser, FaSearch, FaArrowUp, FaArrowDown, FaMinus, FaStar, FaUsers, FaChartLine, FaSpinner } from 'react-icons/fa';
 import BottomNavigation from '../common/BottomNavigation';
@@ -19,7 +19,7 @@ const Leaderboard = () => {
   // const [nextRefresh, setNextRefresh] = useState(30);
 
   // Fetch college rankings
-  const fetchCollegeRankings = async () => {
+  const fetchCollegeRankings = useCallback(async () => {
     try {
       setLoading(true);
       const response = await getCollegeRankings();
@@ -56,10 +56,10 @@ const Leaderboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [collegeRankings]);
 
   // Fetch student rankings
-  const fetchStudentRankings = async () => {
+  const fetchStudentRankings = useCallback(async () => {
     try {
       setLoading(true);
       const response = await getUserRankings();
@@ -96,7 +96,7 @@ const Leaderboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [studentRankings]);
 
   // Helper function to determine level based on points
   const getLevelFromPoints = (points) => {
