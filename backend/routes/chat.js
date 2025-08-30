@@ -177,17 +177,23 @@ router.get('/college/:collegeId', verifyToken, async (req, res) => {
           userReactions[row.message_id][row.reaction_type] = true;
         });
         
-        console.log('Processed reactions:', reactions);
-        console.log('Processed user reactions:', userReactions);
-      } catch (error) {
-        console.error('Error fetching reactions:', error);
+      } catch (reactionError) {
+        console.error('Error fetching reactions:', reactionError);
         // Continue without reactions if there's an error
       }
     }
 
     // Get total count for pagination
+    let countQuery = 'SELECT COUNT(*) as total FROM chat_messages WHERE college_id = ?';
+    let countParams = [collegeId];
+    
+    if (messageType) {
+      countQuery += ' AND message_type = ?';
+      countParams.push(messageType);
+    }
+    
     const [countResult] = await db.promise().execute(
-      'SELECT COUNT(*) as total FROM chat_messages WHERE college_id = ?',
+      countQuery,
       [collegeId]
     );
 
@@ -460,7 +466,7 @@ router.put('/:messageId/pin', verifyToken, async (req, res) => {
 });
 
 // Get pinned messages for a college
-router.get('/college/:collegeId/pinned', async (req, res) => {
+router.get('/college/:collegeId/pinned', verifyToken, async (req, res) => {
   try {
     const { collegeId } = req.params;
     
@@ -562,27 +568,20 @@ router.put('/message/:messageId', verifyToken, async (req, res) => {
       );
     }
 
-    console.log('Message updated successfully');
     res.json({ message: 'Message updated successfully' });
   } catch (error) {
     console.error('Error updating message:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      sqlMessage: error.sqlMessage,
-      sqlState: error.sqlState
-    });
-    res.status(500).json({ error: 'Failed to update message', details: error.message });
+    res.status(500).json({ error: 'Failed to update message' });
   }
 });
 
-// Delete a message (only by sender or admin)
+// Delete a message (only by sender)
 router.delete('/:messageId', verifyToken, async (req, res) => {
   try {
     const { messageId } = req.params;
     const userId = req.user.userId;
 
-    // Check if user owns the message or is admin
+    // Check if user owns the message
     const [message] = await db.promise().execute(
       'SELECT * FROM chat_messages WHERE id = ?',
       [messageId]
@@ -592,8 +591,8 @@ router.delete('/:messageId', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Message not found' });
     }
 
-    if (message[0].user_id !== userId && req.user.role !== 'admin') {
-      return res.status(404).json({ error: 'Not authorized to delete this message' });
+    if (message[0].user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized to delete this message' });
     }
 
     // Delete the message
@@ -609,28 +608,24 @@ router.delete('/:messageId', verifyToken, async (req, res) => {
   }
 });
 
-// Delete a message (only by sender or admin) - with /message/ prefix for frontend compatibility
+// Delete a message (only by sender) - with /message/ prefix for frontend compatibility
 router.delete('/message/:messageId', verifyToken, async (req, res) => {
   try {
     const { messageId } = req.params;
     const userId = req.user.userId;
 
-    console.log('Delete message request:', { messageId, userId });
-
-    // Check if user owns the message or is admin
+    // Check if user owns the message
     const [message] = await db.promise().execute(
       'SELECT * FROM chat_messages WHERE id = ?',
       [messageId]
     );
 
-    console.log('Found message for deletion:', message[0]);
-
     if (!message[0]) {
       return res.status(404).json({ error: 'Message not found' });
     }
 
-    if (message[0].user_id !== userId && req.user.role !== 'admin') {
-      return res.status(404).json({ error: 'Not authorized to delete this message' });
+    if (message[0].user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized to delete this message' });
     }
 
     // Delete the message
@@ -639,17 +634,10 @@ router.delete('/message/:messageId', verifyToken, async (req, res) => {
       [messageId]
     );
 
-    console.log('Message deleted successfully');
     res.json({ message: 'Message deleted successfully' });
   } catch (error) {
     console.error('Error deleting message:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      sqlMessage: error.sqlMessage,
-      sqlState: error.sqlState
-    });
-    res.status(500).json({ error: 'Failed to delete message', details: error.message });
+    res.status(500).json({ error: 'Failed to delete message' });
   }
 });
 
@@ -657,11 +645,11 @@ router.delete('/message/:messageId', verifyToken, async (req, res) => {
 router.post('/message/:messageId/reaction', verifyToken, async (req, res) => {
   try {
     const { messageId } = req.params;
-    const { reaction } = req.body;
+    const { reactionType } = req.body;
     const userId = req.user.userId;
 
-    if (!reaction) {
-      return res.status(400).json({ error: 'Reaction is required' });
+    if (!reactionType) {
+      return res.status(400).json({ error: 'Reaction type is required' });
     }
 
     // Check if message exists
@@ -674,27 +662,27 @@ router.post('/message/:messageId/reaction', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Message not found' });
     }
 
-    // Check if user already has any reaction on this message
+    // Check if user already has a reaction on this message
     const [existingReaction] = await db.promise().execute(
       'SELECT * FROM chat_reactions WHERE message_id = ? AND user_id = ?',
       [messageId, userId]
     );
 
-    if (existingReaction[0]) {
-      // User already has a reaction, update it to the new one
+    if (existingReaction.length > 0) {
+      // Update existing reaction
       await db.promise().execute(
-        'UPDATE chat_reactions SET reaction_type = ?, created_at = NOW() WHERE message_id = ? AND user_id = ?',
-        [reaction, messageId, userId]
+        'UPDATE chat_reactions SET reaction_type = ? WHERE message_id = ? AND user_id = ?',
+        [reactionType, messageId, userId]
       );
-      res.json({ message: 'Reaction updated successfully' });
     } else {
-      // User has no reaction, add new one
+      // Add new reaction
       await db.promise().execute(
-        'INSERT INTO chat_reactions (message_id, user_id, reaction_type, created_at) VALUES (?, ?, ?, NOW())',
-        [messageId, userId, reaction]
+        'INSERT INTO chat_reactions (message_id, user_id, reaction_type) VALUES (?, ?, ?)',
+        [messageId, userId, reactionType]
       );
-      res.json({ message: 'Reaction added successfully' });
     }
+
+    res.json({ message: 'Reaction added successfully' });
   } catch (error) {
     console.error('Error adding reaction:', error);
     res.status(500).json({ error: 'Failed to add reaction' });
@@ -705,32 +693,13 @@ router.post('/message/:messageId/reaction', verifyToken, async (req, res) => {
 router.delete('/message/:messageId/reaction', verifyToken, async (req, res) => {
   try {
     const { messageId } = req.params;
-    const { reaction } = req.body;
     const userId = req.user.userId;
 
-    if (!reaction) {
-      return res.status(400).json({ error: 'Reaction is required' });
-    }
-
-    // Check if message exists
-    const [message] = await db.promise().execute(
-      'SELECT * FROM chat_messages WHERE id = ?',
-      [messageId]
+    // Remove the reaction
+    await db.promise().execute(
+      'DELETE FROM chat_reactions WHERE message_id = ? AND user_id = ?',
+      [messageId, userId]
     );
-
-    if (!message[0]) {
-      return res.status(404).json({ error: 'Message not found' });
-    }
-
-    // Remove reaction
-    const [result] = await db.promise().execute(
-      'DELETE FROM chat_reactions WHERE message_id = ? AND user_id = ? AND reaction_type = ?',
-      [messageId, userId, reaction]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Reaction not found' });
-    }
 
     res.json({ message: 'Reaction removed successfully' });
   } catch (error) {
