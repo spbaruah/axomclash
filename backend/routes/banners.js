@@ -56,6 +56,7 @@ const verifyAdminToken = async (req, res, next) => {
 // Get all active banners (public endpoint)
 router.get('/', async (req, res) => {
   try {
+    console.log('📋 GET /api/banners - Fetching active banners...');
     const [banners] = await db.promise().execute(
       'SELECT * FROM banners WHERE is_active = TRUE ORDER BY display_order ASC, created_at DESC'
     );
@@ -71,16 +72,18 @@ router.get('/', async (req, res) => {
       is_active: banner.is_active
     }));
 
+    console.log(`✅ Found ${formattedBanners.length} active banners`);
     res.json({ banners: formattedBanners });
   } catch (error) {
-    console.error('Error fetching banners:', error);
+    console.error('❌ Error fetching banners:', error);
     res.status(500).json({ error: 'Failed to fetch banners' });
   }
-});
+ });
 
 // Get all banners (admin endpoint)
 router.get('/admin', verifyAdminToken, async (req, res) => {
   try {
+    console.log('📋 GET /api/banners/admin - Fetching all banners for admin...');
     const [banners] = await db.promise().execute(
       'SELECT * FROM banners ORDER BY display_order ASC, created_at DESC'
     );
@@ -98,9 +101,10 @@ router.get('/admin', verifyAdminToken, async (req, res) => {
       updated_at: banner.updated_at
     }));
 
+    console.log(`✅ Found ${formattedBanners.length} banners for admin`);
     res.json({ banners: formattedBanners });
   } catch (error) {
-    console.error('Error fetching admin banners:', error);
+    console.error('❌ Error fetching admin banners:', error);
     res.status(500).json({ error: 'Failed to fetch banners' });
   }
 });
