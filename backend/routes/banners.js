@@ -53,6 +53,62 @@ const verifyAdminToken = async (req, res, next) => {
   }
 };
 
+// Test banner creation endpoint (for debugging)
+router.post('/test', verifyAdminToken, async (req, res) => {
+  try {
+    console.log('🧪 Testing banner creation endpoint...');
+    console.log('📋 Request body:', req.body);
+    console.log('📋 Request headers:', req.headers);
+    
+    // Check if banners table exists
+    try {
+      console.log('🔍 Checking if banners table exists...');
+      await db.promise().execute('SELECT 1 FROM banners LIMIT 1');
+      console.log('✅ Banners table exists');
+      
+      // Check table structure
+      const [columns] = await db.promise().execute('DESCRIBE banners');
+      console.log('📋 Table structure:');
+      columns.forEach(col => {
+        console.log(`  - ${col.Field}: ${col.Type} ${col.Null === 'NO' ? 'NOT NULL' : 'NULL'} ${col.Default ? `DEFAULT ${col.Default}` : ''}`);
+      });
+      
+    } catch (tableError) {
+      console.error('❌ Banners table error:', tableError.message);
+      return res.status(500).json({ 
+        error: 'Banners table issue',
+        details: tableError.message
+      });
+    }
+    
+    // Test database connection with a simple query
+    try {
+      const [result] = await db.promise().execute('SELECT COUNT(*) as count FROM banners');
+      console.log(`✅ Database connection working. Current banner count: ${result[0].count}`);
+    } catch (dbError) {
+      console.error('❌ Database query error:', dbError.message);
+      return res.status(500).json({ 
+        error: 'Database query failed',
+        details: dbError.message
+      });
+    }
+    
+    res.json({ 
+      message: 'Banner creation test completed',
+      tableExists: true,
+      databaseWorking: true,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Test endpoint error:', error);
+    res.status(500).json({ 
+      error: 'Test failed',
+      details: error.message
+    });
+  }
+});
+
 // Health check endpoint for banners
 router.get('/health', async (req, res) => {
   try {
@@ -172,8 +228,31 @@ router.post('/', verifyAdminToken, upload.single('image'), async (req, res) => {
     }
 
     console.log('✅ Image file received:', req.file.originalname);
-    const image_url = req.file.path; // Cloudinary returns the URL in file.path
-    console.log('🌐 Cloudinary URL:', image_url);
+    
+    // Handle both Cloudinary and local file storage
+    let image_url;
+    if (req.file.path && req.file.path.includes('cloudinary.com')) {
+      // Cloudinary upload
+      image_url = req.file.path;
+      console.log('🌐 Cloudinary URL:', image_url);
+    } else {
+      // Local file storage fallback
+      image_url = `/uploads/banners/${req.file.filename}`;
+      console.log('💾 Local file path:', image_url);
+    }
+
+    // Check if banners table exists
+    try {
+      console.log('🔍 Checking if banners table exists...');
+      await db.promise().execute('SELECT 1 FROM banners LIMIT 1');
+      console.log('✅ Banners table exists');
+    } catch (tableError) {
+      console.error('❌ Banners table does not exist:', tableError.message);
+      return res.status(500).json({ 
+        error: 'Banners table not found',
+        details: 'Database table "banners" does not exist. Please create it first.'
+      });
+    }
 
     console.log('💾 Inserting banner into database...');
     const [result] = await db.promise().execute(
@@ -208,6 +287,10 @@ router.post('/', verifyAdminToken, upload.single('image'), async (req, res) => {
       errorMessage = 'Invalid field in banner data';
     } else if (error.code === 'ER_DUP_ENTRY') {
       errorMessage = 'Banner with this title already exists';
+    } else if (error.code === 'ER_TRUNCATED_WRONG_VALUE') {
+      errorMessage = 'Invalid data type for one or more fields';
+    } else if (error.code === 'ER_DATA_TOO_LONG') {
+      errorMessage = 'One or more fields exceed maximum length';
     }
     
     res.status(500).json({ 
