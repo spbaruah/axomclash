@@ -23,22 +23,32 @@ const upload = multer({
 // Middleware to verify admin JWT token
 const verifyAdminToken = async (req, res, next) => {
   try {
+    console.log('🔐 Verifying admin token...');
+    console.log('📋 Headers:', req.headers);
+    
     const token = req.headers.authorization?.split('Bearer ')[1];
     if (!token) {
+      console.log('❌ No token provided');
       return res.status(401).json({ error: 'No token provided' });
     }
 
+    console.log('🔑 Token found:', token.substring(0, 20) + '...');
+    
     const jwt = require('jsonwebtoken');
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
     
+    console.log('🔓 Token decoded:', { userId: decoded.userId, isAdmin: decoded.isAdmin });
+    
     if (!decoded.isAdmin) {
+      console.log('❌ User is not admin');
       return res.status(403).json({ error: 'Admin access required' });
     }
     
     req.admin = decoded;
+    console.log('✅ Admin token verified successfully');
     next();
   } catch (error) {
-    console.error('Admin token verification failed:', error);
+    console.error('❌ Admin token verification failed:', error);
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
@@ -98,14 +108,22 @@ router.get('/admin', verifyAdminToken, async (req, res) => {
 // Create new banner (admin endpoint)
 router.post('/', verifyAdminToken, upload.single('image'), async (req, res) => {
   try {
+    console.log('📝 Creating new banner...');
+    console.log('📋 Request body:', req.body);
+    console.log('📁 File:', req.file);
+    
     const { title, description, cta_text, cta_link, display_order, is_active } = req.body;
     
     if (!req.file) {
+      console.log('❌ No image file provided');
       return res.status(400).json({ error: 'Image file is required' });
     }
 
+    console.log('✅ Image file received:', req.file.originalname);
     const image_url = req.file.path; // Cloudinary returns the URL in file.path
+    console.log('🌐 Cloudinary URL:', image_url);
 
+    console.log('💾 Inserting banner into database...');
     const [result] = await db.promise().execute(
       `INSERT INTO banners (title, description, image_url, cta_text, cta_link, display_order, is_active) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -113,6 +131,7 @@ router.post('/', verifyAdminToken, upload.single('image'), async (req, res) => {
     );
 
     const bannerId = result.insertId;
+    console.log('✅ Banner inserted with ID:', bannerId);
 
     // Fetch the created banner
     const [banners] = await db.promise().execute(
@@ -120,12 +139,13 @@ router.post('/', verifyAdminToken, upload.single('image'), async (req, res) => {
       [bannerId]
     );
 
+    console.log('🎉 Banner created successfully:', banners[0]);
     res.status(201).json({ 
       message: 'Banner created successfully',
       banner: banners[0]
     });
   } catch (error) {
-    console.error('Error creating banner:', error);
+    console.error('❌ Error creating banner:', error);
     res.status(500).json({ error: 'Failed to create banner' });
   }
 });
