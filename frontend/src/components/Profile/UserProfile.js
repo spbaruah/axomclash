@@ -108,12 +108,8 @@ const UserProfile = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`/api/users/${userId}`);
-      if (!response.ok) {
-        throw new Error('User not found');
-      }
-      const data = await response.json();
-      setUser(data.user);
+      const response = await api.get(`/api/users/${userId}`);
+      setUser(response.data.user);
     } catch (error) {
       console.error('Error fetching user profile:', error);
       setError('Failed to load user profile');
@@ -122,38 +118,31 @@ const UserProfile = () => {
 
   const fetchUserPosts = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/posts/user/${userId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      const response = await api.get(`/api/posts/user/${userId}`);
+      const posts = Array.isArray(response.data) ? response.data : response.data.posts || [];
       
-      if (response.ok) {
-        const data = await response.json();
-        const posts = Array.isArray(data) ? data : data.posts || [];
-        
-        // Process posts to include reaction data
-        const postsWithReactions = posts.map(post => ({
-          ...post,
-          user: {
-            username: user?.username || 'Anonymous',
-            profile_picture: user?.profile_picture,
-            college_name: user?.college_name
-          },
-          love_count: post.love_count || 0,
-          laugh_count: post.laugh_count || 0,
-          fire_count: post.fire_count || 0,
-          clap_count: post.clap_count || 0,
-          wow_count: post.wow_count || 0,
-          sad_count: post.sad_count || 0,
-          angry_count: post.angry_count || 0,
-          user_reaction: post.user_reaction || null,
-          likes_count: post.likes_count || 0,
-          comments_count: post.comments_count || 0,
-          shares_count: post.shares_count || 0
-        }));
-        
-        setUserPosts(postsWithReactions);
-      }
+      // Process posts to include reaction data
+      const postsWithReactions = posts.map(post => ({
+        ...post,
+        user: {
+          username: user?.username || 'Anonymous',
+          profile_picture: user?.profile_picture,
+          college_name: user?.college_name
+        },
+        love_count: post.love_count || 0,
+        laugh_count: post.laugh_count || 0,
+        fire_count: post.fire_count || 0,
+        clap_count: post.clap_count || 0,
+        wow_count: post.wow_count || 0,
+        sad_count: post.sad_count || 0,
+        angry_count: post.angry_count || 0,
+        user_reaction: post.user_reaction || null,
+        likes_count: post.likes_count || 0,
+        comments_count: post.comments_count || 0,
+        shares_count: post.shares_count || 0
+      }));
+      
+      setUserPosts(postsWithReactions);
     } catch (error) {
       console.error('Error fetching user posts:', error);
     } finally {

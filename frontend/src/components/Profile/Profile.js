@@ -44,15 +44,8 @@ const Profile = () => {
   const fetchUserPosts = async () => {
     try {
       setLoadingPosts(true);
-      // Fetch user's own posts; include token so private posts are included for owner
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/posts/user/${userProfile.id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUserPosts(Array.isArray(data) ? data : (data.posts || []));
-      }
+      const response = await api.get(`/api/posts/user/${userProfile.id}`);
+      setUserPosts(Array.isArray(response.data) ? response.data : (response.data.posts || []));
     } catch (error) {
       console.error('Error fetching user posts:', error);
       // For demo purposes, create some sample posts
@@ -129,21 +122,13 @@ const Profile = () => {
         }
       }
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/posts/saved`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/posts/saved');
       console.log('Saved posts response status:', response.status);
       console.log('Saved posts response headers:', response.headers);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Saved posts data:', data);
-        console.log('Saved posts array length:', data.savedPosts ? data.savedPosts.length : 'undefined');
-        setSavedPosts(data.savedPosts || []);
-      } else {
-        const errorText = await response.text();
-        console.error('Failed to fetch saved posts:', response.status, response.statusText, errorText);
-      }
+      console.log('Saved posts data:', response.data);
+      console.log('Saved posts array length:', response.data.savedPosts ? response.data.savedPosts.length : 'undefined');
+      setSavedPosts(response.data.savedPosts || []);
     } catch (error) {
       console.error('Error fetching saved posts:', error);
     } finally {
@@ -153,15 +138,9 @@ const Profile = () => {
 
   const handleUnsavePost = async (postId) => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/posts/${postId}/save`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        setSavedPosts(prev => prev.filter(post => post.id !== postId));
-        toast.success('Post removed from saved posts');
-      }
+      await api.delete(`/api/posts/${postId}/save`);
+      setSavedPosts(prev => prev.filter(post => post.id !== postId));
+      toast.success('Post removed from saved posts');
     } catch (error) {
       console.error('Error unsaving post:', error);
       toast.error('Failed to remove post from saved posts');

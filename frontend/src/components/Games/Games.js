@@ -4,6 +4,7 @@ import { FaGamepad, FaUsers, FaPlay, FaClock, FaStar, FaDice, FaBrain, FaSpinner
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import toast from 'react-hot-toast';
+import api from '../../services/axios';
 import LudoRoomSystem from './LudoRoomSystem';
 import TicTacToe from './TicTacToe';
 import BottomNavigation from '../common/BottomNavigation';
@@ -99,9 +100,8 @@ const Games = () => {
   const fetchGames = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/games/active');
-      const data = await response.json();
-      setAvailableGames(data.games || []);
+      const response = await api.get('/api/games/active');
+      setAvailableGames(response.data.games || []);
     } catch (error) {
       console.error('Error fetching games:', error);
       toast.error('Failed to fetch games');
@@ -171,28 +171,16 @@ const Games = () => {
   const createGame = async (gameType) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/games', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify({
-          name: `${gameType.name} - ${userProfile.college_name}`,
-          type: gameType.id,
-          college2_id: null, // Will be set when opponent joins
-          max_players: gameType.players,
-          points_at_stake: gameType.reward
-        })
+      await api.post('/api/games', {
+        name: `${gameType.name} - ${userProfile.college_name}`,
+        type: gameType.id,
+        college2_id: null, // Will be set when opponent joins
+        max_players: gameType.players,
+        points_at_stake: gameType.reward
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        toast.success('Game created! Waiting for opponents...');
-        fetchGames();
-      } else {
-        toast.error('Failed to create game');
-      }
+      
+      toast.success('Game created! Waiting for opponents...');
+      fetchGames();
     } catch (error) {
       console.error('Error creating game:', error);
       toast.error('Failed to create game');
@@ -204,22 +192,13 @@ const Games = () => {
   const joinGame = async (gameId) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/games/${gameId}/join`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-
-      if (response.ok) {
-        toast.success('Joined game successfully!');
-        fetchGames();
-        // Join socket room
-        if (socket) {
-          socket.emit('join-game', gameId);
-        }
-      } else {
-        toast.error('Failed to join game');
+      await api.post(`/api/games/${gameId}/join`);
+      
+      toast.success('Joined game successfully!');
+      fetchGames();
+      // Join socket room
+      if (socket) {
+        socket.emit('join-game', gameId);
       }
     } catch (error) {
       console.error('Error joining game:', error);
@@ -859,11 +838,8 @@ const QuizGame = ({ gameType, onBack }) => {
 
   const fetchQuizQuestions = async () => {
     try {
-      const response = await fetch('/api/quiz/questions?category=General Knowledge&difficulty=easy&limit=5');
-      if (response.ok) {
-        const data = await response.json();
-        setQuestions(data.questions || []);
-      }
+      const response = await api.get('/api/quiz/questions?category=General Knowledge&difficulty=easy&limit=5');
+      setQuestions(response.data.questions || []);
     } catch (error) {
       console.error('Error fetching quiz questions:', error);
     }
