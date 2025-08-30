@@ -50,6 +50,19 @@ const profileUpload = multer({
 // Upload/Update profile picture
 router.put('/profile-picture', verifyToken, profileUpload.single('avatar'), async (req, res) => {
   try {
+    console.log('Profile picture upload request received:', {
+      hasFile: !!req.file,
+      fileInfo: req.file ? {
+        fieldname: req.file.fieldname,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        path: req.file.path,
+        filename: req.file.filename
+      } : null,
+      userId: req.user.userId
+    });
+
     if (!req.file) {
       return res.status(400).json({ error: 'No profile image uploaded' });
     }
@@ -61,6 +74,8 @@ router.put('/profile-picture', verifyToken, profileUpload.single('avatar'), asyn
     const oldPath = rows && rows[0] && rows[0].profile_picture;
 
     const imageUrl = req.file.path; // Cloudinary returns the URL in file.path
+    console.log('Updating database with profile image URL:', imageUrl);
+    
     await db.promise().query('UPDATE users SET profile_picture = ? WHERE id = ?', [imageUrl, userId]);
 
     // Attempt to delete old image from Cloudinary
@@ -72,10 +87,16 @@ router.put('/profile-picture', verifyToken, profileUpload.single('avatar'), asyn
       }
     }
 
+    console.log('Profile picture updated successfully');
     res.json({ message: 'Profile picture updated', profile_picture: imageUrl });
   } catch (error) {
     console.error('Profile picture upload error:', error);
-    res.status(500).json({ error: 'Failed to update profile picture' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to update profile picture', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -108,6 +129,19 @@ router.delete('/profile-picture', verifyToken, async (req, res) => {
 // Upload/Update cover photo
 router.put('/cover', verifyToken, coverUpload.single('cover'), async (req, res) => {
   try {
+    console.log('Cover upload request received:', {
+      hasFile: !!req.file,
+      fileInfo: req.file ? {
+        fieldname: req.file.fieldname,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        path: req.file.path,
+        filename: req.file.filename
+      } : null,
+      userId: req.user.userId
+    });
+
     if (!req.file) {
       return res.status(400).json({ error: 'No cover image uploaded' });
     }
@@ -115,14 +149,23 @@ router.put('/cover', verifyToken, coverUpload.single('cover'), async (req, res) 
     const userId = req.user.userId;
     const imageUrl = req.file.path; // Cloudinary returns the URL in file.path
 
+    console.log('Updating database with image URL:', imageUrl);
+
     await db.promise().query(
       'UPDATE users SET cover_photo = ? WHERE id = ?',[imageUrl, userId]
     );
 
+    console.log('Database updated successfully');
+
     res.json({ message: 'Cover photo updated', cover_photo: imageUrl });
   } catch (error) {
     console.error('Cover upload error:', error);
-    res.status(500).json({ error: 'Failed to update cover photo' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to update cover photo', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
