@@ -898,7 +898,8 @@ io.on('connection', (socket) => {
         players: availableRoom.players,
         playerX: playerX,
         playerO: playerO,
-        currentTurn: 'X'
+        currentTurn: 'X',
+        board: availableRoom.board // Send the board state
       });
       
       console.log(`Player ${player.username} joined available room ${availableRoom.id} and game started`);
@@ -986,7 +987,8 @@ io.on('connection', (socket) => {
       roomId, 
       position, 
       player,
-      nextTurn: 'O'
+      nextTurn: 'O',
+      board: room.board // Send the updated board
     });
     
     // AI makes move after a short delay
@@ -1059,7 +1061,8 @@ io.on('connection', (socket) => {
           roomId, 
           position: move, 
           player: 'O',
-          nextTurn: 'X'
+          nextTurn: 'X',
+          board: room.board // Send the updated board
         });
       }
     }
@@ -1146,7 +1149,8 @@ io.on('connection', (socket) => {
       io.to(roomId).emit('tictactoe-game-start', { 
         roomId, 
         startingPlayer: 'X',
-        players: room.players 
+        players: room.players,
+        board: room.board // Send the board state
       });
       
       console.log(`Tic Tac Toe game started in room ${roomId}`);
@@ -1155,19 +1159,14 @@ io.on('connection', (socket) => {
     console.log(`Player ${player.username} joined Tic Tac Toe room ${roomId}`);
   });
   
-  // Handle Tic Tac Toe moves
+  // Handle Tic Tac Toe moves - UPDATED VERSION
   socket.on('tictactoe-move', (data) => {
     const { roomId, position, player } = data;
     
     const room = tictactoeRooms.get(roomId);
     if (!room || room.status !== 'playing') {
       console.log('Invalid room or game not playing:', roomId);
-      return;
-    }
-    
-    // Validate move - check if position is empty
-    if (room.board[position] !== null) {
-      console.log('Position already taken:', position);
+      socket.emit('tictactoe-move-error', { message: 'Game is not active' });
       return;
     }
     
@@ -1175,51 +1174,67 @@ io.on('connection', (socket) => {
     const currentPlayer = room.players.find(p => p.socketId === socket.id);
     if (!currentPlayer) {
       console.log('Player not found in room:', socket.id);
-      return;
-    }
-    
-    // Validate turn - check if it's the player's turn based on their symbol
-    if (room.currentTurn !== currentPlayer.symbol) {
-      console.log('Not player turn:', currentPlayer.symbol, 'current turn:', room.currentTurn);
+      socket.emit('tictactoe-move-error', { message: 'Player not in this room' });
       return;
     }
     
     // Validate that the player is using their correct symbol
     if (player !== currentPlayer.symbol) {
       console.log('Player using wrong symbol:', player, 'should be:', currentPlayer.symbol);
+      socket.emit('tictactoe-move-error', { message: 'Invalid player symbol' });
       return;
     }
     
-    // Update board
+    // Validate turn - check if it's the player's turn
+    if (room.currentTurn !== currentPlayer.symbol) {
+      console.log('Not player turn:', currentPlayer.symbol, 'current turn:', room.currentTurn);
+      socket.emit('tictactoe-move-error', { message: 'Not your turn' });
+      return;
+    }
+    
+    // Validate move - check if position is empty and within bounds
+    if (position < 0 || position > 8 || room.board[position] !== null) {
+      console.log('Invalid move position:', position);
+      socket.emit('tictactoe-move-error', { message: 'Invalid move' });
+      return;
+    }
+    
+    // Update board with the validated move
     room.board[position] = player;
     
-    // Switch turns
-    room.currentTurn = room.currentTurn === 'X' ? 'O' : 'X';
-    
-    // Check for winner
+    // Check for winner or draw
     const winner = calculateTicTacToeWinner(room.board);
-    if (winner || isTicTacToeBoardFull(room.board)) {
+    const isDraw = isTicTacToeBoardFull(room.board) && !winner;
+    
+    if (winner || isDraw) {
+      // Game over
       room.status = 'finished';
       io.to(roomId).emit('tictactoe-game-over', { 
         roomId, 
-        winner: winner || 'tie', 
+        winner: winner || 'draw', 
         board: room.board 
       });
+      
+      console.log(`Game over in room ${roomId}: ${winner ? winner + ' wins' : 'draw'}`);
     } else {
-      // Send move to all players
+      // Switch turns and continue game
+      room.currentTurn = room.currentTurn === 'X' ? 'O' : 'X';
+      
+      // Send move to all players with updated board and next turn
       io.to(roomId).emit('tictactoe-move', { 
         roomId, 
         position, 
         player,
         playerId: socket.id,
-        nextTurn: room.currentTurn
+        nextTurn: room.currentTurn,
+        board: room.board // Send the entire updated board
       });
+      
+      console.log(`Valid move in room ${roomId}: ${player} at position ${position}, next turn: ${room.currentTurn}`);
     }
-    
-    console.log(`Move made in room ${roomId}: ${player} at position ${position}, next turn: ${room.currentTurn}`);
   });
   
-  // Start Tic Tac Toe game manually
+  // Start Tic Tac Toe game manually - UPDATED VERSION
   socket.on('tictactoe-start-game', (data) => {
     const { roomId, startingPlayer } = data;
     
@@ -1232,23 +1247,30 @@ io.on('connection', (socket) => {
     room.currentTurn = startingPlayer;
     room.board = Array(9).fill(null);
     
+    // Assign symbols to players
+    room.players[0].symbol = 'X';
+    room.players[1].symbol = 'O';
+    
     io.to(roomId).emit('tictactoe-game-start', { 
       roomId, 
       startingPlayer,
-      players: room.players 
+      players: room.players,
+      board: room.board // Send initial empty board
     });
+    
+    console.log(`Tic Tac Toe game started in room ${roomId}, starting player: ${startingPlayer}`);
   });
   
-  // Reset Tic Tac Toe game
+  // Reset Tic Tac Toe game - UPDATED VERSION
   socket.on('reset-tictactoe', (data) => {
     const { roomId } = data;
     
     const room = tictactoeRooms.get(roomId);
-    if (!room || room.status !== 'playing') {
+    if (!room) {
       return;
     }
     
-    // Reset the game state
+    // Reset the game state but keep players
     room.board = Array(9).fill(null);
     room.currentTurn = 'X';
     room.status = 'playing';
