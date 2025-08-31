@@ -24,8 +24,7 @@ A comprehensive gaming platform for college students to compete in various multi
 - Knowledge-based multiplayer competitions
 - 2-4 players per game
 
-### Snake Game
-- Single-player classic snake gameplay
+
 
 ## 🚀 Getting Started
 
