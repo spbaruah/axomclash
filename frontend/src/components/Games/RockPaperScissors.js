@@ -1,0 +1,483 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaHandRock, FaHandPaper, FaHandScissors, FaPlay, FaUsers, FaUserFriends, FaRobot, FaArrowLeft, FaTrophy, FaStar, FaSpinner } from 'react-icons/fa';
+import { useAuth } from '../../contexts/AuthContext';
+import { useSocket } from '../../contexts/SocketContext';
+import toast from 'react-hot-toast';
+import './RockPaperScissors.css';
+
+const RockPaperScissors = ({ gameType, onBack }) => {
+  const [gameMode, setGameMode] = useState(null);
+  const [gameState, setGameState] = useState('waiting');
+  const [playerChoice, setPlayerChoice] = useState(null);
+  const [opponentChoice, setOpponentChoice] = useState(null);
+  const [gameResult, setGameResult] = useState(null);
+  const [score, setScore] = useState({ player: 0, opponent: 0 });
+  const [rounds, setRounds] = useState(0);
+  const [maxRounds] = useState(5);
+  const [gameHistory, setGameHistory] = useState([]);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
+  const [opponentInfo, setOpponentInfo] = useState(null);
+  const [countdown, setCountdown] = useState(3);
+  const [isCountdown, setIsCountdown] = useState(false);
+  
+  const { userProfile } = useAuth();
+  const { socket } = useSocket();
+  const countdownRef = useRef(null);
+
+  const choices = [
+    { id: 'rock', icon: FaHandRock, name: 'Rock', beats: 'scissors' },
+    { id: 'paper', icon: FaHandPaper, name: 'Paper', beats: 'rock' },
+    { id: 'scissors', icon: FaHandScissors, name: 'Scissors', beats: 'paper' }
+  ];
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('rpsGameStart', handleGameStart);
+      socket.on('rpsOpponentChoice', handleOpponentChoice);
+      socket.on('rpsGameResult', handleGameResult);
+      socket.on('rpsOpponentJoined', handleOpponentJoined);
+      socket.on('rpsGameEnd', handleGameEnd);
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('rpsGameStart');
+        socket.off('rpsOpponentChoice');
+        socket.off('rpsGameResult');
+        socket.off('rpsOpponentJoined');
+        socket.off('rpsGameEnd');
+      }
+    };
+  }, [socket]);
+
+  const handleGameStart = (data) => {
+    setGameState('playing');
+    setWaitingForOpponent(false);
+    startCountdown();
+  };
+
+  const handleOpponentChoice = (data) => {
+    setOpponentChoice(data.choice);
+    setWaitingForOpponent(false);
+  };
+
+  const handleGameResult = (data) => {
+    setGameResult(data.result);
+    setScore(data.score);
+    setRounds(data.rounds);
+    setGameHistory(data.history);
+    
+    setTimeout(() => {
+      setPlayerChoice(null);
+      setOpponentChoice(null);
+      setGameResult(null);
+      if (data.rounds < maxRounds) {
+        setGameState('waiting');
+        startCountdown();
+      } else {
+        setGameState('finished');
+      }
+    }, 3000);
+  };
+
+  const handleOpponentJoined = (data) => {
+    setOpponentInfo(data.opponent);
+    setGameState('waiting');
+    startCountdown();
+  };
+
+  const handleGameEnd = (data) => {
+    setGameState('finished');
+    setScore(data.finalScore);
+    setGameHistory(data.history);
+  };
+
+  const startCountdown = () => {
+    setIsCountdown(true);
+    setCountdown(3);
+    
+    countdownRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          setIsCountdown(false);
+          clearInterval(countdownRef.current);
+          return 3;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const selectGameMode = (mode) => {
+    setGameMode(mode);
+    if (mode === 'ai') {
+      setGameState('playing');
+      setOpponentInfo({ name: 'AI Opponent', avatar: null });
+      startCountdown();
+    } else if (mode === 'friend') {
+      // Create room for friend
+      if (socket) {
+        socket.emit('rpsCreateRoom', { userId: userProfile.id, collegeId: userProfile.college_id });
+        setWaitingForOpponent(true);
+      }
+    } else if (mode === 'random') {
+      // Join random matchmaking
+      if (socket) {
+        socket.emit('rpsJoinMatchmaking', { userId: userProfile.id, collegeId: userProfile.college_id });
+        setWaitingForOpponent(true);
+      }
+    }
+  };
+
+  const makeChoice = (choice) => {
+    if (gameState !== 'playing' || isCountdown) return;
+    
+    setPlayerChoice(choice);
+    setWaitingForOpponent(true);
+
+    if (gameMode === 'ai') {
+      // AI opponent makes random choice
+      setTimeout(() => {
+        const aiChoice = choices[Math.floor(Math.random() * choices.length)];
+        setOpponentChoice(aiChoice);
+        setWaitingForOpponent(false);
+        
+        // Calculate result
+        const result = calculateResult(choice, aiChoice);
+        updateScore(result);
+        setGameResult(result);
+        
+        setTimeout(() => {
+          setPlayerChoice(null);
+          setOpponentChoice(null);
+          setGameResult(null);
+          if (rounds < maxRounds - 1) {
+            setRounds(prev => prev + 1);
+            setGameState('waiting');
+            startCountdown();
+          } else {
+            setGameState('finished');
+          }
+        }, 3000);
+      }, 1000);
+    } else {
+      // Multiplayer - emit choice to opponent
+      if (socket) {
+        socket.emit('rpsMakeChoice', { choice, userId: userProfile.id });
+      }
+    }
+  };
+
+  const calculateResult = (playerChoice, opponentChoice) => {
+    if (playerChoice.id === opponentChoice.id) {
+      return 'tie';
+    } else if (playerChoice.beats === opponentChoice.id) {
+      return 'win';
+    } else {
+      return 'lose';
+    }
+  };
+
+  const updateScore = (result) => {
+    setScore(prev => {
+      if (result === 'win') {
+        return { ...prev, player: prev.player + 1 };
+      } else if (result === 'lose') {
+        return { ...prev, opponent: prev.opponent + 1 };
+      }
+      return prev;
+    });
+  };
+
+  const resetGame = () => {
+    setGameState('waiting');
+    setPlayerChoice(null);
+    setOpponentChoice(null);
+    setGameResult(null);
+    setScore({ player: 0, opponent: 0 });
+    setRounds(0);
+    setGameHistory([]);
+    setWaitingForOpponent(false);
+    setOpponentInfo(null);
+    setIsCountdown(false);
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+  };
+
+  const getResultMessage = (result) => {
+    switch (result) {
+      case 'win': return 'You Win! 🎉';
+      case 'lose': return 'You Lose! 😔';
+      case 'tie': return 'It\'s a Tie! 🤝';
+      default: return '';
+    }
+  };
+
+  const getResultColor = (result) => {
+    switch (result) {
+      case 'win': return '#4CAF50';
+      case 'lose': return '#F44336';
+      case 'tie': return '#FF9800';
+      default: return '#666';
+    }
+  };
+
+  if (!gameMode) {
+    return (
+      <div className="rps-container">
+        <div className="rps-header">
+          <button className="back-btn" onClick={onBack}>
+            <FaArrowLeft /> Back to Games
+          </button>
+          <h1>🎯 Rock Paper Scissors</h1>
+          <p>Choose your game mode and start playing!</p>
+        </div>
+
+        <div className="game-modes">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mode-card ai-mode"
+            onClick={() => selectGameMode('ai')}
+          >
+            <div className="mode-icon">
+              <FaRobot size={40} />
+            </div>
+            <h3>Play vs AI</h3>
+            <p>Challenge our AI opponent in a quick 5-round battle</p>
+            <div className="mode-features">
+              <span><FaStar /> Instant Play</span>
+              <span><FaTrophy /> Practice Mode</span>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mode-card friend-mode"
+            onClick={() => selectGameMode('friend')}
+          >
+            <div className="mode-icon">
+              <FaUserFriends size={40} />
+            </div>
+            <h3>Play with Friend</h3>
+            <p>Create a private room and invite your friend to join</p>
+            <div className="mode-features">
+              <span><FaUsers /> 2 Players</span>
+              <span><FaTrophy /> Private Room</span>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mode-card random-mode"
+            onClick={() => selectGameMode('random')}
+          >
+            <div className="mode-icon">
+              <FaUsers size={40} />
+            </div>
+            <h3>Random Match</h3>
+            <p>Find a random opponent from your college for a quick battle</p>
+            <div className="mode-features">
+              <span><FaUsers /> 2 Players</span>
+              <span><FaTrophy /> College Battle</span>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameState === 'finished') {
+    const winner = score.player > score.opponent ? 'You' : 
+                   score.player < score.opponent ? 'Opponent' : 'Tie';
+    
+    return (
+      <div className="rps-container">
+        <div className="rps-header">
+          <button className="back-btn" onClick={onBack}>
+            <FaArrowLeft /> Back to Games
+          </button>
+          <h1>🏆 Game Over!</h1>
+        </div>
+
+        <div className="game-result-final">
+          <div className="final-score">
+            <h2>Final Score</h2>
+            <div className="score-display">
+              <div className="player-score">
+                <span className="player-name">You</span>
+                <span className="score-value">{score.player}</span>
+              </div>
+              <div className="vs-separator">VS</div>
+              <div className="opponent-score">
+                <span className="opponent-name">{opponentInfo?.name || 'Opponent'}</span>
+                <span className="score-value">{score.opponent}</span>
+              </div>
+            </div>
+            <div className="winner-announcement">
+              {winner === 'Tie' ? 'It\'s a Tie! 🤝' : `${winner} Won! 🎉`}
+            </div>
+          </div>
+
+          <div className="game-history">
+            <h3>Round History</h3>
+            <div className="history-list">
+              {gameHistory.map((round, index) => (
+                <div key={index} className="history-item">
+                  <span className="round-number">Round {index + 1}</span>
+                  <span className={`round-result ${round.result}`}>
+                    {round.result === 'win' ? 'W' : round.result === 'lose' ? 'L' : 'T'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="game-actions">
+            <button className="play-again-btn" onClick={resetGame}>
+              <FaPlay /> Play Again
+            </button>
+            <button className="new-game-btn" onClick={() => setGameMode(null)}>
+              New Game
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rps-container">
+      <div className="rps-header">
+        <button className="back-btn" onClick={onBack}>
+          <FaArrowLeft /> Back to Games
+        </button>
+        <h1>🎯 Rock Paper Scissors</h1>
+        <div className="game-info">
+          <span className="mode-badge">{gameMode === 'ai' ? 'AI Mode' : 'Multiplayer'}</span>
+          <span className="round-counter">Round {rounds + 1}/{maxRounds}</span>
+        </div>
+      </div>
+
+      {waitingForOpponent && gameMode !== 'ai' && (
+        <div className="waiting-opponent">
+          <FaSpinner className="spinning" />
+          <p>Waiting for opponent to join...</p>
+        </div>
+      )}
+
+      {isCountdown && (
+        <div className="countdown-overlay">
+          <div className="countdown-number">{countdown}</div>
+          <p>Get Ready!</p>
+        </div>
+      )}
+
+      <div className="game-board">
+        <div className="score-board">
+          <div className="player-info">
+            <div className="avatar">
+              {userProfile?.avatar ? (
+                <img src={userProfile.avatar} alt="You" />
+              ) : (
+                <div className="default-avatar">You</div>
+              )}
+            </div>
+            <span className="player-name">You</span>
+            <span className="player-score">{score.player}</span>
+          </div>
+
+          <div className="vs-separator">VS</div>
+
+          <div className="opponent-info">
+            <div className="avatar">
+              {opponentInfo?.avatar ? (
+                <img src={opponentInfo.avatar} alt="Opponent" />
+              ) : (
+                <div className="default-avatar">
+                  {opponentInfo?.name?.charAt(0) || 'O'}
+                </div>
+              )}
+            </div>
+            <span className="opponent-name">{opponentInfo?.name || 'Opponent'}</span>
+            <span className="opponent-score">{score.opponent}</span>
+          </div>
+        </div>
+
+        <div className="game-area">
+          {gameState === 'waiting' && !isCountdown && (
+            <div className="waiting-message">
+              <p>Choose your move when the countdown starts!</p>
+            </div>
+          )}
+
+          {gameState === 'playing' && !isCountdown && (
+            <div className="choices-container">
+              <h3>Choose Your Move</h3>
+              <div className="choices-grid">
+                {choices.map((choice) => (
+                  <motion.button
+                    key={choice.id}
+                    className={`choice-btn ${playerChoice?.id === choice.id ? 'selected' : ''}`}
+                    onClick={() => makeChoice(choice)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    disabled={playerChoice !== null}
+                  >
+                    <choice.icon size={40} />
+                    <span>{choice.name}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {waitingForOpponent && gameMode === 'ai' && (
+            <div className="waiting-message">
+              <p>AI is thinking...</p>
+            </div>
+          )}
+
+          {playerChoice && opponentChoice && (
+            <div className="battle-result">
+              <div className="choices-display">
+                <div className="player-choice">
+                  <div className="choice-icon">
+                    {choices.find(c => c.id === playerChoice.id)?.icon && 
+                      React.createElement(choices.find(c => c.id === playerChoice.id).icon, { size: 60 })
+                    }
+                  </div>
+                  <span>Your Choice</span>
+                </div>
+
+                <div className="result-display">
+                  <div className="result-message" style={{ color: getResultColor(gameResult) }}>
+                    {getResultMessage(gameResult)}
+                  </div>
+                </div>
+
+                <div className="opponent-choice">
+                  <div className="choice-icon">
+                    {choices.find(c => c.id === opponentChoice.id)?.icon && 
+                      React.createElement(choices.find(c => c.id === opponentChoice.id).icon, { size: 60 })
+                    }
+                  </div>
+                  <span>Opponent's Choice</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RockPaperScissors;

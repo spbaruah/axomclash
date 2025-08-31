@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaGamepad, FaUsers, FaPlay, FaClock, FaStar, FaDice, FaBrain, FaSpinner, FaTimes } from 'react-icons/fa';
+import { FaGamepad, FaUsers, FaPlay, FaClock, FaStar, FaDice, FaBrain, FaSpinner, FaTimes, FaHandRock } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import toast from 'react-hot-toast';
 import api from '../../services/axios';
 import LudoRoomSystem from './LudoRoomSystem';
 import TicTacToe from './TicTacToe';
+import RockPaperScissors from './RockPaperScissors';
 import BottomNavigation from '../common/BottomNavigation';
 import './Games.css';
 
@@ -46,6 +47,18 @@ const Games = () => {
       difficulty: 'Easy',
       reward: 50,
       color: '#4ECDC4',
+      autoCreate: false
+    },
+    {
+      id: 'rockpaperscissors',
+      name: 'Rock Paper Scissors',
+      description: 'Classic RPS battle - 2 players, multiple game modes',
+      icon: FaHandRock,
+      players: 2,
+      duration: '3-5 min',
+      difficulty: 'Easy',
+      reward: 75,
+      color: '#9C27B0',
       autoCreate: false
     },
     {
@@ -224,6 +237,8 @@ const Games = () => {
         />;
       case 'tictactoe':
         return <TicTacToe gameType={selectedGame} onBack={() => setSelectedGame(null)} />;
+      case 'rockpaperscissors':
+        return <RockPaperScissors gameType={selectedGame} onBack={() => setSelectedGame(null)} />;
       case 'quiz':
         return <QuizGame gameType={selectedGame} onBack={() => setSelectedGame(null)} />;
 

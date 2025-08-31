@@ -41,6 +41,7 @@ const chatRoutes = require('./routes/chat');
 
 const quizRoutes = require('./routes/quiz');
 const ludoRoomsRoutes = require('./routes/ludoRooms');
+const rpsRoutes = require('./routes/rps');
 const adminRoutes = require('./routes/admin');
 const bannerRoutes = require('./routes/banners');
 
@@ -109,6 +110,7 @@ app.use('/api/chat', chatRoutes);
 
 app.use('/api/quiz', quizRoutes);
 app.use('/api/games/ludo-rooms', ludoRoomsRoutes);
+app.use('/api/rps', rpsRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Add debugging for banner routes
@@ -1363,6 +1365,209 @@ io.on('connection', (socket) => {
   
   const isTicTacToeBoardFull = (board) => {
     return board.every(square => square !== null);
+  };
+
+  // Rock Paper Scissors Socket Handlers
+  socket.on('rpsCreateRoom', (data) => {
+    const { userId, collegeId } = data;
+    const roomId = `rps_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const room = {
+      id: roomId,
+      status: 'waiting',
+      players: [{
+        userId,
+        collegeId,
+        socketId: socket.id,
+        ready: false,
+        choice: null
+      }],
+      currentRound: 0,
+      maxRounds: 5,
+      scores: { [userId]: 0 },
+      history: [],
+      createdAt: new Date()
+    };
+    
+    // Store room in memory (in production, use Redis)
+    if (!global.rpsRooms) global.rpsRooms = new Map();
+    global.rpsRooms.set(roomId, room);
+    
+    socket.join(roomId);
+    socket.emit('rpsRoomCreated', { roomId, room });
+    
+    console.log(`RPS room created: ${roomId} by user ${userId}`);
+  });
+
+  socket.on('rpsJoinMatchmaking', (data) => {
+    const { userId, collegeId } = data;
+    
+    // Find available room or create new one
+    if (!global.rpsRooms) global.rpsRooms = new Map();
+    
+    let availableRoom = null;
+    for (const [roomId, room] of global.rpsRooms) {
+      if (room.status === 'waiting' && room.players.length < 2) {
+        availableRoom = room;
+        break;
+      }
+    }
+    
+    if (!availableRoom) {
+      // Create new room for matchmaking
+      const roomId = `rps_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      availableRoom = {
+        id: roomId,
+        status: 'waiting',
+        players: [],
+        currentRound: 0,
+        maxRounds: 5,
+        scores: {},
+        history: [],
+        createdAt: new Date()
+      };
+      global.rpsRooms.set(roomId, availableRoom);
+    }
+    
+    // Add player to room
+    availableRoom.players.push({
+      userId,
+      collegeId,
+      socketId: socket.id,
+      ready: false,
+      choice: null
+    });
+    
+    availableRoom.scores[userId] = 0;
+    socket.join(availableRoom.id);
+    
+    // Notify all players in room
+    io.to(availableRoom.id).emit('rpsOpponentJoined', {
+      opponent: { userId, collegeId },
+      room: availableRoom
+    });
+    
+    // If room is full, start countdown
+    if (availableRoom.players.length === 2) {
+      availableRoom.status = 'countdown';
+      io.to(availableRoom.id).emit('rpsGameStart', { room: availableRoom });
+    }
+    
+    console.log(`Player ${userId} joined RPS matchmaking, room: ${availableRoom.id}`);
+  });
+
+  socket.on('rpsMakeChoice', (data) => {
+    const { choice, userId } = data;
+    
+    // Find room where player is
+    if (!global.rpsRooms) return;
+    
+    let playerRoom = null;
+    for (const [roomId, room] of global.rpsRooms) {
+      const player = room.players.find(p => p.userId === userId);
+      if (player) {
+        playerRoom = room;
+        break;
+      }
+    }
+    
+    if (!playerRoom) return;
+    
+    // Record player's choice
+    const player = playerRoom.players.find(p => p.userId === userId);
+    if (player) {
+      player.choice = choice;
+    }
+    
+    // Check if all players have made choices
+    const allPlayersChosen = playerRoom.players.every(p => p.choice !== null);
+    
+    if (allPlayersChosen) {
+      // Calculate round result
+      const result = calculateRPSResult(playerRoom.players);
+      
+      // Update scores and history
+      updateRPSGameState(playerRoom, result);
+      
+      // Notify all players of the result
+      io.to(playerRoom.id).emit('rpsGameResult', {
+        result: result.result,
+        score: playerRoom.scores,
+        rounds: playerRoom.currentRound,
+        history: playerRoom.history
+      });
+      
+      // Check if game is over
+      if (playerRoom.currentRound >= playerRoom.maxRounds) {
+        playerRoom.status = 'finished';
+        io.to(playerRoom.id).emit('rpsGameEnd', {
+          finalScore: playerRoom.scores,
+          history: playerRoom.history
+        });
+      } else {
+        // Reset for next round
+        playerRoom.players.forEach(p => p.choice = null);
+        playerRoom.status = 'waiting';
+        
+        // Start countdown for next round
+        setTimeout(() => {
+          if (playerRoom.status === 'waiting') {
+            playerRoom.status = 'countdown';
+            io.to(playerRoom.id).emit('rpsGameStart', { room: playerRoom });
+          }
+        }, 3000);
+      }
+    }
+  });
+
+  // Helper functions for RPS
+  const calculateRPSResult = (players) => {
+    const choices = players.map(p => p.choice);
+    const uniqueChoices = [...new Set(choices)];
+    
+    if (uniqueChoices.length === 1) {
+      return { result: 'tie' };
+    }
+    
+    // Determine winner based on RPS rules
+    const rock = choices.filter(c => c === 'rock').length;
+    const paper = choices.filter(c => c === 'paper').length;
+    const scissors = choices.filter(c => c === 'scissors').length;
+    
+    if (rock > 0 && paper > 0 && scissors > 0) {
+      return { result: 'tie' };
+    } else if (rock > 0 && paper > 0) {
+      return { result: 'paper_wins' };
+    } else if (rock > 0 && scissors > 0) {
+      return { result: 'rock_wins' };
+    } else if (paper > 0 && scissors > 0) {
+      return { result: 'scissors_wins' };
+    }
+    
+    return { result: 'tie' };
+  };
+
+  const updateRPSGameState = (room, result) => {
+    // Add round to history
+    room.history.push({
+      round: room.currentRound + 1,
+      choices: room.players.map(p => ({ userId: p.userId, choice: p.choice })),
+      result: result.result
+    });
+    
+    // Update scores based on result
+    if (result.result === 'rock_wins') {
+      const rockPlayer = room.players.find(p => p.choice === 'rock');
+      if (rockPlayer) room.scores[rockPlayer.userId]++;
+    } else if (result.result === 'paper_wins') {
+      const paperPlayer = room.players.find(p => p.choice === 'paper');
+      if (paperPlayer) room.scores[paperPlayer.userId]++;
+    } else if (result.result === 'scissors_wins') {
+      const scissorsPlayer = room.players.find(p => p.choice === 'scissors');
+      if (scissorsPlayer) room.scores[scissorsPlayer.userId]++;
+    }
+    
+    room.currentRound++;
   };
 
   // Handle disconnection
