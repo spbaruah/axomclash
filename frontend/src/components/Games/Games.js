@@ -216,6 +216,7 @@ const Games = () => {
       }
     } else {
       // For manual games, show the game board
+      // TicTacToe will show mode selection first
       setSelectedGame(gameType);
       setGameRoom(null);
     }

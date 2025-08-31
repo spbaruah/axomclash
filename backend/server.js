@@ -850,6 +850,170 @@ io.on('connection', (socket) => {
     socket.emit('tictactoe-room-created', { roomId, room });
     console.log(`Tic Tac Toe room ${roomId} created by ${player.username}`);
   });
+
+  // Start solo Tic Tac Toe game with AI
+  socket.on('start-solo-tictactoe', (data) => {
+    const { difficulty, player } = data;
+    
+    const roomId = `solo-ttt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const room = {
+      id: roomId,
+      players: [player],
+      status: 'playing',
+      board: Array(9).fill(null),
+      currentTurn: 'X',
+      difficulty: difficulty,
+      isSolo: true,
+      createdAt: new Date()
+    };
+    
+    tictactoeRooms.set(roomId, room);
+    socket.join(roomId);
+    
+    socket.emit('solo-tictactoe-started', { roomId, room });
+    console.log(`Solo Tic Tac Toe game started with ${difficulty} difficulty for ${player.username}`);
+  });
+
+  // Handle solo Tic Tac Toe moves
+  socket.on('solo-tictactoe-move', (data) => {
+    const { roomId, position, player } = data;
+    
+    const room = tictactoeRooms.get(roomId);
+    if (!room || !room.isSolo || room.status !== 'playing') {
+      return;
+    }
+    
+    // Validate move
+    if (room.board[position] !== null || room.currentTurn !== player) {
+      return;
+    }
+    
+    // Update board with player move
+    room.board[position] = player;
+    
+    // Check for winner after player move
+    const winner = calculateTicTacToeWinner(room.board);
+    if (winner || isTicTacToeBoardFull(room.board)) {
+      room.status = 'finished';
+      socket.emit('solo-tictactoe-game-over', { 
+        roomId, 
+        winner: winner || 'tie', 
+        board: room.board,
+        finalBoard: room.board
+      });
+      return;
+    }
+    
+    // Switch to AI turn
+    room.currentTurn = 'O';
+    socket.emit('solo-tictactoe-move-updated', { 
+      roomId, 
+      position, 
+      player,
+      nextTurn: 'O'
+    });
+    
+    // AI makes move after a short delay
+    setTimeout(() => {
+      makeAIMove(roomId, room.difficulty);
+    }, 500);
+  });
+
+  // AI move function for solo games
+  const makeAIMove = (roomId, difficulty) => {
+    const room = tictactoeRooms.get(roomId);
+    if (!room || !room.isSolo || room.status !== 'playing') {
+      return;
+    }
+    
+    let move;
+    if (difficulty === 'hard') {
+      // Unbeatable AI using minimax algorithm
+      move = findBestMove([...room.board]);
+    } else {
+      // Easy AI - random moves
+      const availableMoves = room.board.map((cell, index) => cell === null ? index : null).filter(index => index !== null);
+      move = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    }
+    
+    if (move !== null && move !== undefined) {
+      // Update board with AI move
+      room.board[move] = 'O';
+      
+      // Check for winner after AI move
+      const winner = calculateTicTacToeWinner(room.board);
+      if (winner || isTicTacToeBoardFull(room.board)) {
+        room.status = 'finished';
+        socket.to(roomId).emit('solo-tictactoe-game-over', { 
+          roomId, 
+          winner: winner || 'tie', 
+          board: room.board,
+          finalBoard: room.board
+        });
+      } else {
+        // Switch back to player turn
+        room.currentTurn = 'X';
+        socket.to(roomId).emit('solo-tictactoe-move-updated', { 
+          roomId, 
+          position: move, 
+          player: 'O',
+          nextTurn: 'X'
+        });
+      }
+    }
+  };
+
+  // Minimax algorithm for unbeatable AI
+  const findBestMove = (board) => {
+    let bestScore = -Infinity;
+    let bestMove = null;
+    
+    for (let i = 0; i < board.length; i++) {
+      if (board[i] === null) {
+        board[i] = 'O';
+        let score = minimax(board, 0, false);
+        board[i] = null;
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = i;
+        }
+      }
+    }
+    return bestMove;
+  };
+
+  const minimax = (board, depth, isMaximizing) => {
+    const winner = calculateTicTacToeWinner(board);
+    if (winner === 'O') return 1;
+    if (winner === 'X') return -1;
+    if (isTicTacToeBoardFull(board)) return 0;
+    
+    if (isMaximizing) {
+      let bestScore = -Infinity;
+      for (let i = 0; i < board.length; i++) {
+        if (board[i] === null) {
+          board[i] = 'O';
+          let score = minimax(board, depth + 1, false);
+          board[i] = null;
+          bestScore = Math.max(score, bestScore);
+        }
+      }
+      return bestScore;
+    } else {
+      let bestScore = Infinity;
+      for (let i = 0; i < board.length; i++) {
+        if (board[i] === null) {
+          board[i] = 'X';
+          let score = minimax(board, depth + 1, true);
+          board[i] = null;
+          bestScore = Math.min(score, bestScore);
+        }
+      }
+      return bestScore;
+    }
+  };
   
   // Join Tic Tac Toe room
   socket.on('join-tictactoe-room', (data) => {

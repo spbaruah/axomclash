@@ -1,71 +1,443 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSocket } from '../../contexts/SocketContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { FaRobot, FaUser, FaPlay, FaArrowLeft, FaRefresh, FaCrown, FaHandshake } from 'react-icons/fa';
 import './TicTacToe.css';
 
 const TicTacToe = ({ gameType, onBack }) => {
-	const [board, setBoard] = useState(Array(9).fill(null));
-	const [xIsNext, setXIsNext] = useState(true);
-	const [winner, setWinner] = useState(null);
+  const [gameMode, setGameMode] = useState(null); // 'solo' or 'online'
+  const [difficulty, setDifficulty] = useState('easy'); // 'easy' or 'hard'
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [currentPlayer, setCurrentPlayer] = useState('X');
+  const [winner, setWinner] = useState(null);
+  const [gameStatus, setGameStatus] = useState('waiting'); // 'waiting', 'playing', 'finished'
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [roomId, setRoomId] = useState(null);
+  const [opponent, setOpponent] = useState(null);
+  const [showGameOver, setShowGameOver] = useState(false);
 
-	const calculateWinner = (squares) => {
-		const lines = [
-			[0, 1, 2],
-			[3, 4, 5],
-			[6, 7, 8],
-			[0, 3, 6],
-			[1, 4, 7],
-			[2, 5, 8],
-			[0, 4, 8],
-			[2, 4, 6]
-		];
-		for (let i = 0; i < lines.length; i++) {
-			const [a, b, c] = lines[i];
-			if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-				return squares[a];
-			}
-		}
-		return null;
-	};
+  const { socket } = useSocket();
+  const { userProfile } = useAuth();
 
-	const handleClick = (index) => {
-		if (board[index] || winner) return;
-		const next = board.slice();
-		next[index] = xIsNext ? 'X' : 'O';
-		const maybeWinner = calculateWinner(next);
-		setBoard(next);
-		setXIsNext(!xIsNext);
-		if (maybeWinner) setWinner(maybeWinner);
-	};
+  // Game winning combinations
+  const winningCombinations = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+    [0, 4, 8], [2, 4, 6] // diagonals
+  ];
 
-	const resetGame = () => {
-		setBoard(Array(9).fill(null));
-		setXIsNext(true);
-		setWinner(null);
-	};
+  // Calculate winner
+  const calculateWinner = useCallback((squares) => {
+    for (let i = 0; i < winningCombinations.length; i++) {
+      const [a, b, c] = winningCombinations[i];
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+        return squares[a];
+      }
+    }
+    return null;
+  }, []);
 
-	return (
-		<div className="game-board ttt-board">
-			<div className="game-header">
-				<button className="back-btn" onClick={onBack}>← Back to Games</button>
-				<h2>{gameType?.name || 'Tic Tac Toe'}</h2>
-				<div className="game-info">
-					<span>{winner ? `Winner: ${winner}` : `Turn: ${xIsNext ? 'X' : 'O'}`}</span>
-				</div>
-			</div>
+  // Check if board is full (draw)
+  const isBoardFull = useCallback((squares) => {
+    return squares.every(square => square !== null);
+  }, []);
 
-			<div className="ttt-container">
-				<div className="ttt-grid">
-					{board.map((cell, idx) => (
-						<button key={idx} className={`ttt-cell ${cell ? 'filled' : ''}`} onClick={() => handleClick(idx)}>
-							{cell}
-						</button>
-					))}
-				</div>
-				<div className="ttt-actions">
-					<button className="reset-btn" onClick={resetGame}>Reset</button>
-				</div>
-			</div>
-		</div>
-	);
+  // Handle cell click
+  const handleCellClick = useCallback((index) => {
+    if (board[index] || winner || gameStatus !== 'playing') return;
+    if (gameMode === 'solo' && currentPlayer === 'O') return;
+    if (gameMode === 'online' && !isMyTurn) return;
+
+    const newBoard = [...board];
+    newBoard[index] = currentPlayer;
+    setBoard(newBoard);
+
+    if (gameMode === 'solo') {
+      // Solo mode - send move to backend AI
+      socket.emit('solo-tictactoe-move', {
+        roomId,
+        position: index,
+        player: currentPlayer
+      });
+    } else if (gameMode === 'online') {
+      // Online mode - send move to server
+      socket.emit('tictactoe-move', {
+        roomId,
+        position: index,
+        player: currentPlayer
+      });
+    }
+  }, [board, winner, gameStatus, currentPlayer, gameMode, isMyTurn, socket, roomId]);
+
+  // Reset game
+  const resetGame = useCallback(() => {
+    setBoard(Array(9).fill(null));
+    setCurrentPlayer('X');
+    setWinner(null);
+    setGameStatus('playing');
+    setShowGameOver(false);
+    setIsMyTurn(true);
+  }, []);
+
+  // Start new game
+  const startNewGame = useCallback(() => {
+    setGameMode(null);
+    setDifficulty('easy');
+    setBoard(Array(9).fill(null));
+    setCurrentPlayer('X');
+    setWinner(null);
+    setGameStatus('waiting');
+    setIsMyTurn(false);
+    setRoomId(null);
+    setOpponent(null);
+    setShowGameOver(false);
+  }, []);
+
+  // Start solo game
+  const startSoloGame = useCallback(() => {
+    setGameMode('solo');
+    setGameStatus('waiting');
+    
+    // Start solo game with AI on backend
+    socket.emit('start-solo-tictactoe', {
+      difficulty,
+      player: {
+        id: userProfile?.id || 'anonymous',
+        username: userProfile?.username || 'Player',
+        collegeName: userProfile?.collegeName || 'Unknown College'
+      }
+    });
+  }, [socket, difficulty, userProfile]);
+
+  // Start online game
+  const startOnlineGame = useCallback(() => {
+    setGameMode('online');
+    setGameStatus('waiting');
+    
+    // Create room and join
+    const newRoomId = `ttt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setRoomId(newRoomId);
+    
+    socket.emit('create-tictactoe-room', {
+      roomId: newRoomId,
+      player: {
+        id: userProfile?.id || 'anonymous',
+        username: userProfile?.username || 'Player',
+        collegeName: userProfile?.collegeName || 'Unknown College'
+      }
+    });
+  }, [socket, userProfile]);
+
+  // Socket event handlers for online mode
+  useEffect(() => {
+    if (!socket || gameMode !== 'online') return;
+
+    const handleRoomCreated = (data) => {
+      console.log('TicTacToe room created:', data);
+    };
+
+    const handlePlayerJoined = (data) => {
+      console.log('Player joined:', data);
+      setOpponent(data.player);
+      setGameStatus('playing');
+      setIsMyTurn(data.player.id !== userProfile?.id);
+    };
+
+    const handleGameStart = (data) => {
+      console.log('Game started:', data);
+      setGameStatus('playing');
+      setIsMyTurn(data.startingPlayer === 'X');
+    };
+
+    const handleMove = (data) => {
+      console.log('Move received:', data);
+      const newBoard = [...board];
+      newBoard[data.position] = data.player;
+      setBoard(newBoard);
+      setCurrentPlayer(data.nextTurn);
+      setIsMyTurn(data.playerId !== socket.id);
+      
+      const newWinner = calculateWinner(newBoard);
+      if (newWinner) {
+        setWinner(newWinner);
+        setGameStatus('finished');
+        setShowGameOver(true);
+      } else if (isBoardFull(newBoard)) {
+        setWinner('draw');
+        setGameStatus('finished');
+        setShowGameOver(true);
+      }
+    };
+
+    const handleGameOver = (data) => {
+      console.log('Game over:', data);
+      setWinner(data.winner);
+      setGameStatus('finished');
+      setShowGameOver(true);
+    };
+
+    const handlePlayerLeft = (data) => {
+      console.log('Player left:', data);
+      setWinner('opponent_left');
+      setGameStatus('finished');
+      setShowGameOver(true);
+    };
+
+    socket.on('tictactoe-room-created', handleRoomCreated);
+    socket.on('tictactoe-player-joined', handlePlayerJoined);
+    socket.on('tictactoe-game-start', handleGameStart);
+    socket.on('tictactoe-move', handleMove);
+    socket.on('tictactoe-game-over', handleGameOver);
+    socket.on('tictactoe-player-left', handlePlayerLeft);
+
+    return () => {
+      socket.off('tictactoe-room-created', handleRoomCreated);
+      socket.off('tictactoe-player-joined', handlePlayerJoined);
+      socket.off('tictactoe-game-start', handleGameStart);
+      socket.off('tictactoe-move', handleMove);
+      socket.off('tictactoe-game-over', handleGameOver);
+      socket.off('tictactoe-player-left', handlePlayerLeft);
+    };
+  }, [socket, gameMode, board, calculateWinner, isBoardFull, userProfile]);
+
+  // Socket event handlers for solo mode
+  useEffect(() => {
+    if (!socket || gameMode !== 'solo') return;
+
+    const handleSoloGameStarted = (data) => {
+      console.log('Solo TicTacToe game started:', data);
+      setRoomId(data.roomId);
+      setGameStatus('playing');
+      setIsMyTurn(true);
+    };
+
+    const handleSoloMoveUpdated = (data) => {
+      console.log('Solo move updated:', data);
+      const newBoard = [...board];
+      newBoard[data.position] = data.player;
+      setBoard(newBoard);
+      setCurrentPlayer(data.nextTurn);
+      setIsMyTurn(data.nextTurn === 'X');
+      
+      const newWinner = calculateWinner(newBoard);
+      if (newWinner) {
+        setWinner(newWinner);
+        setGameStatus('finished');
+        setShowGameOver(true);
+      } else if (isBoardFull(newBoard)) {
+        setWinner('draw');
+        setGameStatus('finished');
+        setShowGameOver(true);
+      }
+    };
+
+    const handleSoloGameOver = (data) => {
+      console.log('Solo game over:', data);
+      setBoard(data.finalBoard);
+      setWinner(data.winner);
+      setGameStatus('finished');
+      setShowGameOver(true);
+    };
+
+    socket.on('solo-tictactoe-started', handleSoloGameStarted);
+    socket.on('solo-tictactoe-move-updated', handleSoloMoveUpdated);
+    socket.on('solo-tictactoe-game-over', handleSoloGameOver);
+
+    return () => {
+      socket.off('solo-tictactoe-started', handleSoloGameStarted);
+      socket.off('solo-tictactoe-move-updated', handleSoloMoveUpdated);
+      socket.off('solo-tictactoe-game-over', handleSoloGameOver);
+    };
+  }, [socket, gameMode, board, calculateWinner, isBoardFull]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (socket && roomId) {
+        if (gameMode === 'online') {
+          socket.emit('leave-tictactoe-room', { roomId, playerId: userProfile?.id });
+        }
+        // For solo games, the room will be cleaned up automatically
+      }
+    };
+  }, [socket, roomId, userProfile, gameMode]);
+
+  // Show mode selection screen
+  if (!gameMode) {
+    return (
+      <div className="game-board ttt-board">
+        <div className="game-header">
+          <button className="back-btn" onClick={onBack}>
+            <FaArrowLeft /> Back to Games
+          </button>
+          <h2>🎯 Tic Tac Toe</h2>
+          <p>Choose your game mode</p>
+        </div>
+
+        <div className="ttt-mode-selection">
+          <div className="mode-card solo-mode" onClick={startSoloGame}>
+            <div className="mode-icon">
+              <FaRobot size={48} />
+            </div>
+            <h3>Play Solo</h3>
+            <p>Challenge the AI bot</p>
+            <div className="difficulty-selector">
+              <label>Difficulty:</label>
+              <select 
+                value={difficulty} 
+                onChange={(e) => setDifficulty(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <option value="easy">Easy</option>
+                <option value="hard">Hard (Unbeatable)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mode-card online-mode" onClick={startOnlineGame}>
+            <div className="mode-icon">
+              <FaUser size={48} />
+            </div>
+            <h3>Play Online</h3>
+            <p>1v1 multiplayer battle</p>
+            <div className="online-status">
+              <span className="status-indicator online"></span>
+              <span>Live multiplayer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show game board
+  return (
+    <div className="game-board ttt-board">
+      <div className="game-header">
+        <button className="back-btn" onClick={onBack}>
+          <FaArrowLeft /> Back to Games
+        </button>
+        <h2>🎯 Tic Tac Toe</h2>
+        <div className="game-info">
+          {gameMode === 'solo' ? (
+            <div className="mode-indicator">
+              <FaRobot /> Solo vs AI ({difficulty})
+            </div>
+          ) : (
+            <div className="mode-indicator">
+              <FaUser /> Online 1v1
+              {opponent && <span> vs {opponent.username}</span>}
+            </div>
+          )}
+          
+          {gameStatus === 'playing' && !winner && (
+            <div className="turn-indicator">
+              {currentPlayer === 'X' ? (
+                <span className="player-x">X's Turn</span>
+              ) : (
+                <span className="player-o">O's Turn</span>
+              )}
+            </div>
+          )}
+          
+          {gameStatus === 'waiting' && gameMode === 'online' && (
+            <div className="waiting-indicator">
+              <div className="spinner"></div>
+              Waiting for opponent...
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="ttt-container">
+        <div className="ttt-grid">
+          {board.map((cell, idx) => (
+            <button 
+              key={idx} 
+              className={`ttt-cell ${cell ? 'filled' : ''} ${cell === 'X' ? 'player-x' : cell === 'O' ? 'player-o' : ''}`}
+              onClick={() => handleCellClick(idx)}
+              disabled={gameStatus !== 'playing' || winner || (gameMode === 'solo' && currentPlayer === 'O') || (gameMode === 'online' && !isMyTurn)}
+            >
+              {cell}
+            </button>
+          ))}
+        </div>
+
+        <div className="ttt-actions">
+          {gameStatus === 'playing' && !winner && (
+            <button className="reset-btn" onClick={resetGame}>
+              <FaRefresh /> Reset Game
+            </button>
+          )}
+          
+          {gameStatus === 'finished' && (
+            <div className="game-over-actions">
+              <button className="play-again-btn" onClick={resetGame}>
+                <FaPlay /> Play Again
+              </button>
+              <button className="new-game-btn" onClick={startNewGame}>
+                <FaRefresh /> New Game
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Game Over Modal */}
+      {showGameOver && (
+        <div className="game-over-modal">
+          <div className="modal-content">
+            <div className="result-icon">
+              {winner === 'X' ? (
+                <FaCrown className="winner-icon player-x" />
+              ) : winner === 'O' ? (
+                <FaCrown className="winner-icon player-o" />
+              ) : (
+                <FaHandshake className="draw-icon" />
+              )}
+            </div>
+            
+            <h3 className="result-title">
+              {winner === 'X' || winner === 'O' ? (
+                <>
+                  <span className={winner === 'X' ? 'player-x' : 'player-o'}>
+                    {winner} Wins!
+                  </span>
+                </>
+              ) : winner === 'draw' ? (
+                "It's a Draw!"
+              ) : winner === 'opponent_left' ? (
+                "Opponent Left"
+              ) : (
+                "Game Over"
+              )}
+            </h3>
+            
+            <p className="result-message">
+              {winner === 'X' || winner === 'O' ? (
+                `Congratulations! ${winner} has won the game!`
+              ) : winner === 'draw' ? (
+                "Great game! Both players played well!"
+              ) : winner === 'opponent_left' ? (
+                "Your opponent has left the game."
+              ) : (
+                "The game has ended."
+              )}
+            </p>
+            
+            <div className="modal-actions">
+              <button className="play-again-btn" onClick={resetGame}>
+                <FaPlay /> Play Again
+              </button>
+              <button className="new-game-btn" onClick={startNewGame}>
+                <FaRefresh /> New Game
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default TicTacToe;
