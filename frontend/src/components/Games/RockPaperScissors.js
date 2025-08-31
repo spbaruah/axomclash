@@ -102,6 +102,10 @@ const RockPaperScissors = ({ gameType, onBack }) => {
         if (prev <= 1) {
           setIsCountdown(false);
           clearInterval(countdownRef.current);
+          // Set game state to playing when countdown ends
+          if (gameState === 'waiting') {
+            setGameState('playing');
+          }
           return 3;
         }
         return prev - 1;
@@ -112,7 +116,7 @@ const RockPaperScissors = ({ gameType, onBack }) => {
   const selectGameMode = (mode) => {
     setGameMode(mode);
     if (mode === 'ai') {
-      setGameState('playing');
+      setGameState('waiting'); // Start with waiting state, then countdown will transition to playing
       setOpponentInfo({ name: 'AI Opponent', avatar: null });
       startCountdown();
     } else if (mode === 'friend') {
@@ -131,7 +135,7 @@ const RockPaperScissors = ({ gameType, onBack }) => {
   };
 
   const makeChoice = (choice) => {
-    if (gameState !== 'playing' || isCountdown) return;
+    if ((gameState !== 'playing' && gameState !== 'waiting') || isCountdown) return;
     
     setPlayerChoice(choice);
     setWaitingForOpponent(true);
@@ -145,6 +149,7 @@ const RockPaperScissors = ({ gameType, onBack }) => {
         
         // Calculate result
         const result = calculateResult(choice, aiChoice);
+        setGameHistory(prev => [...prev, { round: rounds + 1, result, playerChoice: choice.id, opponentChoice: aiChoice.id }]);
         updateScore(result);
         setGameResult(result);
         
@@ -155,7 +160,9 @@ const RockPaperScissors = ({ gameType, onBack }) => {
           if (rounds < maxRounds - 1) {
             setRounds(prev => prev + 1);
             setGameState('waiting');
-            startCountdown();
+            setWaitingForOpponent(false); // Ensure waiting state is reset for next round
+            // Small delay before starting countdown to ensure smooth transition
+            setTimeout(() => startCountdown(), 500);
           } else {
             setGameState('finished');
           }
@@ -418,7 +425,7 @@ const RockPaperScissors = ({ gameType, onBack }) => {
             </div>
           )}
 
-          {gameState === 'playing' && !isCountdown && (
+          {(gameState === 'playing' || (gameState === 'waiting' && isCountdown)) && !playerChoice && (
             <div className="choices-container">
               <h3>Choose Your Move</h3>
               <div className="choices-grid">
