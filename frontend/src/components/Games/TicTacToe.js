@@ -149,15 +149,15 @@ const TicTacToe = ({ gameType, onBack }) => {
       console.log('Game started:', data);
       setGameStatus('playing');
       
-      // Determine which player I am (X or O)
-      const myPlayer = data.players.find(p => p.id === userProfile?.id);
-      const opponentPlayer = data.players.find(p => p.id !== userProfile?.id);
+      // Determine which player I am (X or O) based on socket.id
+      const myPlayer = data.players.find(p => p.socketId === socket.id);
+      const opponentPlayer = data.players.find(p => p.socketId !== socket.id);
       
       if (myPlayer && opponentPlayer) {
         setOpponent(opponentPlayer);
         
         // Set initial turn - if starting player is X, and I'm X, then it's my turn
-        const isMyTurn = data.startingPlayer === 'X' ? (myPlayer.id === userProfile?.id) : (myPlayer.id !== userProfile?.id);
+        const isMyTurn = data.startingPlayer === 'X' ? (myPlayer.socketId === socket.id) : (myPlayer.socketId !== socket.id);
         setIsMyTurn(isMyTurn);
         
         // Set current player to starting player
@@ -173,8 +173,8 @@ const TicTacToe = ({ gameType, onBack }) => {
       setCurrentPlayer(data.nextTurn);
       
       // Determine whose turn it is next
+      // If the move was made by me (my socket.id), then it's the opponent's turn next
       // If the move was made by the opponent, then it's my turn next
-      // If the move was made by me, then it's the opponent's turn next
       const moveWasMadeByMe = data.playerId === socket.id;
       setIsMyTurn(!moveWasMadeByMe);
       

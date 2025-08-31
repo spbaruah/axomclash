@@ -866,7 +866,10 @@ io.on('connection', (socket) => {
     
     if (availableRoom) {
       // Join the available room
-      availableRoom.players.push(player);
+      availableRoom.players.push({
+        ...player,
+        socketId: socket.id
+      });
       socket.join(availableRoom.id);
       
       // Notify all players in the room
@@ -897,7 +900,10 @@ io.on('connection', (socket) => {
       const newRoomId = `ttt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const newRoom = {
         id: newRoomId,
-        players: [player],
+        players: [{
+          ...player,
+          socketId: socket.id
+        }],
         status: 'waiting',
         board: Array(9).fill(null),
         currentTurn: 'X',
