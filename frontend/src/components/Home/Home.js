@@ -540,7 +540,7 @@ const Home = () => {
           </div>
           <div className="top-nav-buttons">
             <button 
-              className="nav-btn hand-hud-btn"
+              className="nav-btn"
               onClick={() => setShowHandHUD(true)}
               title="Hand Tracking HUD"
             >
