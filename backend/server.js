@@ -866,16 +866,22 @@ io.on('connection', (socket) => {
     
     if (availableRoom) {
       // Join the available room
-      availableRoom.players.push({
+      const joiningPlayer = {
         ...player,
-        socketId: socket.id
-      });
+        socketId: socket.id,
+        symbol: 'O' // Second player is always O
+      };
+      availableRoom.players.push(joiningPlayer);
+      
+      // Assign X to the first player
+      availableRoom.players[0].symbol = 'X';
+      
       socket.join(availableRoom.id);
       
       // Notify all players in the room
       io.to(availableRoom.id).emit('tictactoe-player-joined', { 
         roomId: availableRoom.id, 
-        player 
+        player: joiningPlayer 
       });
       
       // Start the game since we now have 2 players
@@ -891,7 +897,8 @@ io.on('connection', (socket) => {
         startingPlayer: 'X',
         players: availableRoom.players,
         playerX: playerX,
-        playerO: playerO
+        playerO: playerO,
+        currentTurn: 'X'
       });
       
       console.log(`Player ${player.username} joined available room ${availableRoom.id} and game started`);
@@ -902,7 +909,8 @@ io.on('connection', (socket) => {
         id: newRoomId,
         players: [{
           ...player,
-          socketId: socket.id
+          socketId: socket.id,
+          symbol: 'X' // First player is always X
         }],
         status: 'waiting',
         board: Array(9).fill(null),
@@ -1163,16 +1171,22 @@ io.on('connection', (socket) => {
       return;
     }
     
-    // Validate turn - check if it's the player's turn
-    if (room.currentTurn !== player) {
-      console.log('Not player turn:', player, 'current turn:', room.currentTurn);
+    // Find the player making the move
+    const currentPlayer = room.players.find(p => p.socketId === socket.id);
+    if (!currentPlayer) {
+      console.log('Player not found in room:', socket.id);
       return;
     }
     
-    // Find the player making the move
-    const currentPlayer = room.players.find(p => p.id === socket.id);
-    if (!currentPlayer) {
-      console.log('Player not found in room:', socket.id);
+    // Validate turn - check if it's the player's turn based on their symbol
+    if (room.currentTurn !== currentPlayer.symbol) {
+      console.log('Not player turn:', currentPlayer.symbol, 'current turn:', room.currentTurn);
+      return;
+    }
+    
+    // Validate that the player is using their correct symbol
+    if (player !== currentPlayer.symbol) {
+      console.log('Player using wrong symbol:', player, 'should be:', currentPlayer.symbol);
       return;
     }
     
@@ -1223,6 +1237,30 @@ io.on('connection', (socket) => {
       startingPlayer,
       players: room.players 
     });
+  });
+  
+  // Reset Tic Tac Toe game
+  socket.on('reset-tictactoe', (data) => {
+    const { roomId } = data;
+    
+    const room = tictactoeRooms.get(roomId);
+    if (!room || room.status !== 'playing') {
+      return;
+    }
+    
+    // Reset the game state
+    room.board = Array(9).fill(null);
+    room.currentTurn = 'X';
+    room.status = 'playing';
+    
+    // Notify all players that the game has been reset
+    io.to(roomId).emit('tictactoe-game-reset', { 
+      roomId,
+      board: room.board,
+      currentTurn: room.currentTurn
+    });
+    
+    console.log(`Tic Tac Toe game reset in room ${roomId}`);
   });
   
   // Leave Tic Tac Toe room

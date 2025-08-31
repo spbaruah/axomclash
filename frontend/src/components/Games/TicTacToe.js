@@ -15,6 +15,8 @@ const TicTacToe = ({ gameType, onBack }) => {
   const [roomId, setRoomId] = useState(null);
   const [opponent, setOpponent] = useState(null);
   const [showGameOver, setShowGameOver] = useState(false);
+  const [mySymbol, setMySymbol] = useState(null); // Track which symbol (X or O) I am
+  const [opponentSymbol, setOpponentSymbol] = useState(null); // Track opponent's symbol
 
   const { socket } = useSocket();
   const { userProfile } = useAuth();
@@ -49,7 +51,8 @@ const TicTacToe = ({ gameType, onBack }) => {
     if (gameMode === 'online' && !isMyTurn) return;
 
     const newBoard = [...board];
-    newBoard[index] = currentPlayer;
+    const playerSymbol = gameMode === 'online' ? mySymbol : currentPlayer;
+    newBoard[index] = playerSymbol;
     setBoard(newBoard);
 
     if (gameMode === 'solo') {
@@ -64,10 +67,10 @@ const TicTacToe = ({ gameType, onBack }) => {
       socket.emit('tictactoe-move', {
         roomId,
         position: index,
-        player: currentPlayer
+        player: playerSymbol
       });
     }
-  }, [board, winner, gameStatus, currentPlayer, gameMode, isMyTurn, socket, roomId]);
+  }, [board, winner, gameStatus, currentPlayer, gameMode, isMyTurn, socket, roomId, mySymbol]);
 
   // Reset game
   const resetGame = useCallback(() => {
@@ -78,12 +81,19 @@ const TicTacToe = ({ gameType, onBack }) => {
     setShowGameOver(false);
     setIsMyTurn(true);
     
+    // For online mode, reset turn to X (first player)
+    if (gameMode === 'online' && roomId) {
+      setIsMyTurn(mySymbol === 'X');
+      // Reset the game on the backend
+      socket.emit('reset-tictactoe', { roomId });
+    }
+    
     // For solo mode, we need to restart the game with the backend
     if (gameMode === 'solo' && roomId) {
       // Reset the game on the backend
       socket.emit('reset-solo-tictactoe', { roomId });
     }
-  }, [gameMode, roomId, socket]);
+  }, [gameMode, roomId, socket, mySymbol]);
 
   // Start new game
   const startNewGame = useCallback(() => {
@@ -97,6 +107,8 @@ const TicTacToe = ({ gameType, onBack }) => {
     setRoomId(null);
     setOpponent(null);
     setShowGameOver(false);
+    setMySymbol(null);
+    setOpponentSymbol(null);
   }, []);
 
   // Start solo game
@@ -156,12 +168,18 @@ const TicTacToe = ({ gameType, onBack }) => {
       if (myPlayer && opponentPlayer) {
         setOpponent(opponentPlayer);
         
+        // Set my symbol and opponent's symbol
+        setMySymbol(myPlayer.symbol);
+        setOpponentSymbol(opponentPlayer.symbol);
+        
         // Set initial turn - if starting player is X, and I'm X, then it's my turn
-        const isMyTurn = data.startingPlayer === 'X' ? (myPlayer.socketId === socket.id) : (myPlayer.socketId !== socket.id);
+        const isMyTurn = data.startingPlayer === myPlayer.symbol;
         setIsMyTurn(isMyTurn);
         
         // Set current player to starting player
         setCurrentPlayer(data.startingPlayer);
+        
+        console.log(`Game started - I am ${myPlayer.symbol}, opponent is ${opponentPlayer.symbol}, starting player: ${data.startingPlayer}, my turn: ${isMyTurn}`);
       }
     };
 
@@ -204,12 +222,23 @@ const TicTacToe = ({ gameType, onBack }) => {
       setShowGameOver(true);
     };
 
+    const handleGameReset = (data) => {
+      console.log('Game reset:', data);
+      setBoard(data.board);
+      setCurrentPlayer(data.currentTurn);
+      setWinner(null);
+      setGameStatus('playing');
+      setShowGameOver(false);
+      setIsMyTurn(mySymbol === data.currentTurn);
+    };
+
     socket.on('tictactoe-room-created', handleRoomCreated);
     socket.on('tictactoe-player-joined', handlePlayerJoined);
     socket.on('tictactoe-game-start', handleGameStart);
     socket.on('tictactoe-move', handleMove);
     socket.on('tictactoe-game-over', handleGameOver);
     socket.on('tictactoe-player-left', handlePlayerLeft);
+    socket.on('tictactoe-game-reset', handleGameReset);
 
     return () => {
       socket.off('tictactoe-room-created', handleRoomCreated);
@@ -218,8 +247,9 @@ const TicTacToe = ({ gameType, onBack }) => {
       socket.off('tictactoe-move', handleMove);
       socket.off('tictactoe-game-over', handleGameOver);
       socket.off('tictactoe-player-left', handlePlayerLeft);
+      socket.off('tictactoe-game-reset', handleGameReset);
     };
-  }, [socket, gameMode, board, calculateWinner, isBoardFull, userProfile]);
+  }, [socket, gameMode, board, calculateWinner, isBoardFull, userProfile, mySymbol]);
 
   // Socket event handlers for solo mode
   useEffect(() => {
