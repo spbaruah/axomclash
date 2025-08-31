@@ -46,24 +46,24 @@ const TicTacToe = ({ gameType, onBack }) => {
 
   // Handle cell click
   const handleCellClick = useCallback((index) => {
+    // Additional validation on client side to prevent unnecessary requests
     if (board[index] || winner || gameStatus !== 'playing') return;
-    if (gameMode === 'solo' && currentPlayer === 'O') return;
-    if (gameMode === 'online' && !isMyTurn) return;
+    if (gameMode === 'online' && !isMyTurn) {
+      alert("It's not your turn!");
+      return;
+    }
 
-    const newBoard = [...board];
     const playerSymbol = gameMode === 'online' ? mySymbol : currentPlayer;
-    newBoard[index] = playerSymbol;
-    setBoard(newBoard);
-
+    
     if (gameMode === 'solo') {
-      // Solo mode - send move to backend AI
+      // Solo mode logic remains the same
       socket.emit('solo-tictactoe-move', {
         roomId,
         position: index,
         player: currentPlayer
       });
     } else if (gameMode === 'online') {
-      // Online mode - send move to server
+      // Online mode - send move to server for validation
       socket.emit('tictactoe-move', {
         roomId,
         position: index,
@@ -142,7 +142,7 @@ const TicTacToe = ({ gameType, onBack }) => {
     });
   }, [socket, userProfile]);
 
-  // Socket event handlers for online mode
+  // Socket event handlers for online mode - UPDATED VERSION
   useEffect(() => {
     if (!socket || gameMode !== 'online') return;
 
@@ -160,6 +160,11 @@ const TicTacToe = ({ gameType, onBack }) => {
     const handleGameStart = (data) => {
       console.log('Game started:', data);
       setGameStatus('playing');
+      
+      // Use the board from the server
+      if (data.board) {
+        setBoard(data.board);
+      }
       
       // Determine which player I am (X or O) based on socket.id
       const myPlayer = data.players.find(p => p.socketId === socket.id);
@@ -185,27 +190,31 @@ const TicTacToe = ({ gameType, onBack }) => {
 
     const handleMove = (data) => {
       console.log('Move received:', data);
-      const newBoard = [...board];
-      newBoard[data.position] = data.player;
-      setBoard(newBoard);
+      
+      // Use the board state from the server instead of updating locally
+      setBoard(data.board);
       setCurrentPlayer(data.nextTurn);
       
       // Determine whose turn it is next
-      // If the move was made by me (my socket.id), then it's the opponent's turn next
-      // If the move was made by the opponent, then it's my turn next
       const moveWasMadeByMe = data.playerId === socket.id;
       setIsMyTurn(!moveWasMadeByMe);
       
-      const newWinner = calculateWinner(newBoard);
+      const newWinner = calculateWinner(data.board);
       if (newWinner) {
         setWinner(newWinner);
         setGameStatus('finished');
         setShowGameOver(true);
-      } else if (isBoardFull(newBoard)) {
+      } else if (isBoardFull(data.board)) {
         setWinner('draw');
         setGameStatus('finished');
         setShowGameOver(true);
       }
+    };
+
+    const handleMoveError = (data) => {
+      console.log('Move error:', data);
+      // Show error message to user
+      alert(data.message || 'Invalid move');
     };
 
     const handleGameOver = (data) => {
@@ -229,6 +238,8 @@ const TicTacToe = ({ gameType, onBack }) => {
       setWinner(null);
       setGameStatus('playing');
       setShowGameOver(false);
+      
+      // Set turn based on who I am
       setIsMyTurn(mySymbol === data.currentTurn);
     };
 
@@ -236,6 +247,7 @@ const TicTacToe = ({ gameType, onBack }) => {
     socket.on('tictactoe-player-joined', handlePlayerJoined);
     socket.on('tictactoe-game-start', handleGameStart);
     socket.on('tictactoe-move', handleMove);
+    socket.on('tictactoe-move-error', handleMoveError);
     socket.on('tictactoe-game-over', handleGameOver);
     socket.on('tictactoe-player-left', handlePlayerLeft);
     socket.on('tictactoe-game-reset', handleGameReset);
@@ -245,13 +257,14 @@ const TicTacToe = ({ gameType, onBack }) => {
       socket.off('tictactoe-player-joined', handlePlayerJoined);
       socket.off('tictactoe-game-start', handleGameStart);
       socket.off('tictactoe-move', handleMove);
+      socket.off('tictactoe-move-error', handleMoveError);
       socket.off('tictactoe-game-over', handleGameOver);
       socket.off('tictactoe-player-left', handlePlayerLeft);
       socket.off('tictactoe-game-reset', handleGameReset);
     };
-  }, [socket, gameMode, board, calculateWinner, isBoardFull, userProfile, mySymbol]);
+  }, [socket, gameMode, calculateWinner, isBoardFull, userProfile, mySymbol]);
 
-  // Socket event handlers for solo mode
+  // Socket event handlers for solo mode - UPDATED VERSION
   useEffect(() => {
     if (!socket || gameMode !== 'solo') return;
 
@@ -264,18 +277,17 @@ const TicTacToe = ({ gameType, onBack }) => {
 
     const handleSoloMoveUpdated = (data) => {
       console.log('Solo move updated:', data);
-      const newBoard = [...board];
-      newBoard[data.position] = data.player;
-      setBoard(newBoard);
+      // Use the board from the server
+      setBoard(data.board);
       setCurrentPlayer(data.nextTurn);
       setIsMyTurn(data.nextTurn === 'X');
       
-      const newWinner = calculateWinner(newBoard);
+      const newWinner = calculateWinner(data.board);
       if (newWinner) {
         setWinner(newWinner);
         setGameStatus('finished');
         setShowGameOver(true);
-      } else if (isBoardFull(newBoard)) {
+      } else if (isBoardFull(data.board)) {
         setWinner('draw');
         setGameStatus('finished');
         setShowGameOver(true);
@@ -311,7 +323,7 @@ const TicTacToe = ({ gameType, onBack }) => {
       socket.off('solo-tictactoe-game-over', handleSoloGameOver);
       socket.off('solo-tictactoe-reset', handleSoloGameReset);
     };
-  }, [socket, gameMode, board, calculateWinner, isBoardFull]);
+  }, [socket, gameMode, calculateWinner, isBoardFull]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -395,10 +407,12 @@ const TicTacToe = ({ gameType, onBack }) => {
           
           {gameStatus === 'playing' && !winner && (
             <div className="turn-indicator">
-              {currentPlayer === 'X' ? (
-                <span className="player-x">X's Turn</span>
+              {isMyTurn ? (
+                <span className="player-turn">Your Turn ({mySymbol})</span>
               ) : (
-                <span className="player-o">O's Turn</span>
+                <span className="opponent-turn">
+                  {gameMode === 'solo' ? "AI's Turn (O)" : `${opponent?.username || 'Opponent'}'s Turn (${opponentSymbol})`}
+                </span>
               )}
             </div>
           )}
@@ -455,8 +469,10 @@ const TicTacToe = ({ gameType, onBack }) => {
                 <FaCrown className="winner-icon player-x" />
               ) : winner === 'O' ? (
                 <FaCrown className="winner-icon player-o" />
-              ) : (
+              ) : winner === 'draw' ? (
                 <FaHandshake className="draw-icon" />
+              ) : (
+                <FaHandshake className="opponent-left-icon" />
               )}
             </div>
             
@@ -478,7 +494,11 @@ const TicTacToe = ({ gameType, onBack }) => {
             
             <p className="result-message">
               {winner === 'X' || winner === 'O' ? (
-                `Congratulations! ${winner} has won the game!`
+                gameMode === 'solo' ? (
+                  winner === mySymbol ? "Congratulations! You won!" : "The AI won. Better luck next time!"
+                ) : (
+                  winner === mySymbol ? "Congratulations! You won!" : `${opponent?.username || 'Opponent'} won!`
+                )
               ) : winner === 'draw' ? (
                 "Great game! Both players played well!"
               ) : winner === 'opponent_left' ? (
@@ -504,5 +524,3 @@ const TicTacToe = ({ gameType, onBack }) => {
 };
 
 export default TicTacToe;
-
-
