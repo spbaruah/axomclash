@@ -975,6 +975,30 @@ io.on('connection', (socket) => {
     }, 500);
   });
 
+  // Reset solo Tic Tac Toe game
+  socket.on('reset-solo-tictactoe', (data) => {
+    const { roomId } = data;
+    
+    const room = tictactoeRooms.get(roomId);
+    if (!room || !room.isSolo) {
+      return;
+    }
+    
+    // Reset the room state
+    room.board = Array(9).fill(null);
+    room.currentTurn = 'X';
+    room.status = 'playing';
+    
+    // Notify the client that the game has been reset
+    socket.emit('solo-tictactoe-reset', { 
+      roomId, 
+      board: room.board,
+      currentTurn: 'X'
+    });
+    
+    console.log(`Solo Tic Tac Toe game reset in room ${roomId}`);
+  });
+
   // AI move function for solo games
   const makeAIMove = (roomId, difficulty) => {
     const room = tictactoeRooms.get(roomId);

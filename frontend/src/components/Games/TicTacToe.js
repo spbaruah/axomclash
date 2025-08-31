@@ -77,7 +77,13 @@ const TicTacToe = ({ gameType, onBack }) => {
     setGameStatus('playing');
     setShowGameOver(false);
     setIsMyTurn(true);
-  }, []);
+    
+    // For solo mode, we need to restart the game with the backend
+    if (gameMode === 'solo' && roomId) {
+      // Reset the game on the backend
+      socket.emit('reset-solo-tictactoe', { roomId });
+    }
+  }, [gameMode, roomId, socket]);
 
   // Start new game
   const startNewGame = useCallback(() => {
@@ -235,14 +241,26 @@ const TicTacToe = ({ gameType, onBack }) => {
       setShowGameOver(true);
     };
 
+    const handleSoloGameReset = (data) => {
+      console.log('Solo game reset:', data);
+      setBoard(data.board);
+      setCurrentPlayer(data.currentTurn);
+      setWinner(null);
+      setGameStatus('playing');
+      setShowGameOver(false);
+      setIsMyTurn(true);
+    };
+
     socket.on('solo-tictactoe-started', handleSoloGameStarted);
     socket.on('solo-tictactoe-move-updated', handleSoloMoveUpdated);
     socket.on('solo-tictactoe-game-over', handleSoloGameOver);
+    socket.on('solo-tictactoe-reset', handleSoloGameReset);
 
     return () => {
       socket.off('solo-tictactoe-started', handleSoloGameStarted);
       socket.off('solo-tictactoe-move-updated', handleSoloMoveUpdated);
       socket.off('solo-tictactoe-game-over', handleSoloGameOver);
+      socket.off('solo-tictactoe-reset', handleSoloGameReset);
     };
   }, [socket, gameMode, board, calculateWinner, isBoardFull]);
 
