@@ -94,18 +94,18 @@ const RockPaperScissors = ({ gameType, onBack }) => {
   };
 
   const startCountdown = () => {
+    console.log('Starting countdown, current gameState:', gameState);
     setIsCountdown(true);
     setCountdown(3);
     
     countdownRef.current = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
+          console.log('Countdown ended, setting gameState to playing');
           setIsCountdown(false);
           clearInterval(countdownRef.current);
-          // Set game state to playing when countdown ends
-          if (gameState === 'waiting') {
-            setGameState('playing');
-          }
+          // Always set game state to playing when countdown ends
+          setGameState('playing');
           return 3;
         }
         return prev - 1;
@@ -135,7 +135,11 @@ const RockPaperScissors = ({ gameType, onBack }) => {
   };
 
   const makeChoice = (choice) => {
-    if ((gameState !== 'playing' && gameState !== 'waiting') || isCountdown) return;
+    console.log('makeChoice called with:', choice.id, 'gameState:', gameState, 'isCountdown:', isCountdown);
+    if ((gameState !== 'playing' && gameState !== 'waiting') || isCountdown) {
+      console.log('Choice blocked - gameState:', gameState, 'isCountdown:', isCountdown);
+      return;
+    }
     
     setPlayerChoice(choice);
     setWaitingForOpponent(true);
@@ -158,12 +162,15 @@ const RockPaperScissors = ({ gameType, onBack }) => {
           setOpponentChoice(null);
           setGameResult(null);
           if (rounds < maxRounds - 1) {
-            setRounds(prev => prev + 1);
+            const nextRound = rounds + 1;
+            console.log('Moving to next round:', nextRound);
+            setRounds(nextRound);
             setGameState('waiting');
             setWaitingForOpponent(false); // Ensure waiting state is reset for next round
-            // Small delay before starting countdown to ensure smooth transition
-            setTimeout(() => startCountdown(), 500);
+            // Start countdown immediately for next round
+            startCountdown();
           } else {
+            console.log('Game finished, all rounds completed');
             setGameState('finished');
           }
         }, 3000);
