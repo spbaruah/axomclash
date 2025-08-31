@@ -206,11 +206,14 @@ const HandHUD = ({ isOpen, onClose }) => {
     const x = tip.x * Sx;
     const y = tip.y * Sy;
     
-    for (let i = 0; i < 6 * speed; i++) {
+    // Generate more particles at higher speeds for better visual effect
+    const particleCount = Math.max(3, Math.floor(6 * speed));
+    
+    for (let i = 0; i < particleCount; i++) {
       particlesRef.current.push({
         x, y,
-        vx: (Math.random() - 0.5) * 2 * speed,
-        vy: (Math.random() - 0.5) * 2 * speed,
+        vx: (Math.random() - 0.5) * 3 * speed,
+        vy: (Math.random() - 0.5) * 3 * speed,
         life: 1,
         r: 2 + Math.random() * 2
       });
@@ -220,10 +223,11 @@ const HandHUD = ({ isOpen, onClose }) => {
   const stepParticles = (ctx) => {
     for (let i = particlesRef.current.length - 1; i >= 0; i--) {
       const particle = particlesRef.current[i];
-      particle.x += particle.vx;
-      particle.y += particle.vy;
-      particle.vy += 0.03;
-      particle.life -= 0.02;
+      // Apply speed multiplier to particle movement
+      particle.x += particle.vx * speed;
+      particle.y += particle.vy * speed;
+      particle.vy += 0.03 * speed;
+      particle.life -= 0.02 * speed;
       
       if (particle.life <= 0) {
         particlesRef.current.splice(i, 1);
@@ -421,6 +425,7 @@ const HandHUD = ({ isOpen, onClose }) => {
           />
           <div className="hand-hud-hud">
             <span className="fps-capsule">{fps}</span>
+            <span className="speed-indicator">{speed}x</span>
           </div>
         </div>
       </div>
