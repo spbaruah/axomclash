@@ -47,13 +47,41 @@ const TicTacToe = ({ gameType, onBack }) => {
   // Handle cell click
   const handleCellClick = useCallback((index) => {
     // Additional validation on client side to prevent unnecessary requests
-    if (board[index] || winner || gameStatus !== 'playing') return;
-    if (gameMode === 'online' && !isMyTurn) {
-      alert("It's not your turn!");
+    if (board[index] || winner || gameStatus !== 'playing') {
+      console.log('Cell click blocked:', { 
+        cellValue: board[index], 
+        winner, 
+        gameStatus, 
+        isMyTurn, 
+        mySymbol 
+      });
+      return;
+    }
+    
+    if (gameMode === 'online' && (!mySymbol || !isMyTurn)) {
+      console.log('Turn validation failed:', { 
+        isMyTurn, 
+        mySymbol, 
+        currentPlayer, 
+        gameStatus 
+      });
+      if (!mySymbol) {
+        alert("Game not ready yet, please wait...");
+      } else {
+        alert("It's not your turn!");
+      }
       return;
     }
 
     const playerSymbol = gameMode === 'online' ? mySymbol : currentPlayer;
+    
+    console.log('Making move:', { 
+      index, 
+      playerSymbol, 
+      roomId, 
+      gameMode, 
+      isMyTurn 
+    });
     
     if (gameMode === 'solo') {
       // Solo mode logic remains the same
@@ -148,18 +176,20 @@ const TicTacToe = ({ gameType, onBack }) => {
 
     const handleRoomCreated = (data) => {
       console.log('TicTacToe room created:', data);
+      setRoomId(data.roomId);
     };
 
     const handlePlayerJoined = (data) => {
       console.log('Player joined:', data);
       setOpponent(data.player);
-      setGameStatus('playing');
-      setIsMyTurn(data.player.id !== userProfile?.id);
+      // Don't set game status here - wait for game start event
+      // Don't set turn here - wait for game start event
     };
 
     const handleGameStart = (data) => {
       console.log('Game started:', data);
       setGameStatus('playing');
+      setRoomId(data.roomId); // Ensure roomId is set
       
       // Use the board from the server
       if (data.board) {
@@ -185,19 +215,46 @@ const TicTacToe = ({ gameType, onBack }) => {
         setCurrentPlayer(data.startingPlayer);
         
         console.log(`Game started - I am ${myPlayer.symbol}, opponent is ${opponentPlayer.symbol}, starting player: ${data.startingPlayer}, my turn: ${isMyTurn}`);
+        console.log('Game start state:', { 
+          roomId: data.roomId, 
+          mySymbol: myPlayer.symbol, 
+          opponentSymbol: opponentPlayer.symbol, 
+          startingPlayer: data.startingPlayer, 
+          isMyTurn, 
+          gameStatus: 'playing' 
+        });
+      } else {
+        console.error('Could not find player information in game start data');
       }
     };
 
     const handleMove = (data) => {
       console.log('Move received:', data);
+      console.log('Current state before move:', { 
+        mySymbol, 
+        isMyTurn, 
+        currentPlayer, 
+        gameStatus 
+      });
       
       // Use the board state from the server instead of updating locally
       setBoard(data.board);
       setCurrentPlayer(data.nextTurn);
       
-      // Determine whose turn it is next
-      const moveWasMadeByMe = data.playerId === socket.id;
-      setIsMyTurn(!moveWasMadeByMe);
+      // Determine whose turn it is next - FIXED LOGIC
+      // If nextTurn matches my symbol, then it's my turn
+      if (mySymbol) {
+        const newIsMyTurn = data.nextTurn === mySymbol;
+        setIsMyTurn(newIsMyTurn);
+        
+        console.log('Turn updated:', { 
+          nextTurn: data.nextTurn, 
+          mySymbol, 
+          newIsMyTurn 
+        });
+      } else {
+        console.warn('mySymbol not set yet, cannot determine turn');
+      }
       
       const newWinner = calculateWinner(data.board);
       if (newWinner) {
@@ -213,6 +270,13 @@ const TicTacToe = ({ gameType, onBack }) => {
 
     const handleMoveError = (data) => {
       console.log('Move error:', data);
+      console.log('Current state when error occurred:', { 
+        mySymbol, 
+        isMyTurn, 
+        currentPlayer, 
+        gameStatus, 
+        roomId 
+      });
       // Show error message to user
       alert(data.message || 'Invalid move');
     };
@@ -239,8 +303,8 @@ const TicTacToe = ({ gameType, onBack }) => {
       setGameStatus('playing');
       setShowGameOver(false);
       
-      // Set turn based on who I am
-      setIsMyTurn(mySymbol === data.currentTurn);
+      // Set turn based on who I am - X always starts
+      setIsMyTurn(mySymbol === 'X');
     };
 
     socket.on('tictactoe-room-created', handleRoomCreated);
