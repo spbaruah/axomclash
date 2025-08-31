@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSocket } from '../../contexts/SocketContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { FaRobot, FaUser, FaPlay, FaArrowLeft, FaRefresh, FaCrown, FaHandshake } from 'react-icons/fa';
+import { FaRobot, FaUser, FaPlay, FaArrowLeft, FaRedo, FaCrown, FaHandshake } from 'react-icons/fa';
 import './TicTacToe.css';
 
 const TicTacToe = ({ gameType, onBack }) => {
@@ -366,7 +366,7 @@ const TicTacToe = ({ gameType, onBack }) => {
         <div className="ttt-actions">
           {gameStatus === 'playing' && !winner && (
             <button className="reset-btn" onClick={resetGame}>
-              <FaRefresh /> Reset Game
+              <FaRedo /> Reset Game
             </button>
           )}
           
@@ -376,7 +376,7 @@ const TicTacToe = ({ gameType, onBack }) => {
                 <FaPlay /> Play Again
               </button>
               <button className="new-game-btn" onClick={startNewGame}>
-                <FaRefresh /> New Game
+                <FaRedo /> New Game
               </button>
             </div>
           )}
@@ -430,7 +430,7 @@ const TicTacToe = ({ gameType, onBack }) => {
                 <FaPlay /> Play Again
               </button>
               <button className="new-game-btn" onClick={startNewGame}>
-                <FaRefresh /> New Game
+                <FaRedo /> New Game
               </button>
             </div>
           </div>
