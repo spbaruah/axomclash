@@ -879,10 +879,16 @@ io.on('connection', (socket) => {
       availableRoom.status = 'playing';
       availableRoom.currentTurn = 'X';
       
+      // Assign X and O to players
+      const playerX = availableRoom.players[0];
+      const playerO = availableRoom.players[1];
+      
       io.to(availableRoom.id).emit('tictactoe-game-start', { 
         roomId: availableRoom.id, 
         startingPlayer: 'X',
-        players: availableRoom.players 
+        players: availableRoom.players,
+        playerX: playerX,
+        playerO: playerO
       });
       
       console.log(`Player ${player.username} joined available room ${availableRoom.id} and game started`);
@@ -1141,6 +1147,26 @@ io.on('connection', (socket) => {
     
     const room = tictactoeRooms.get(roomId);
     if (!room || room.status !== 'playing') {
+      console.log('Invalid room or game not playing:', roomId);
+      return;
+    }
+    
+    // Validate move - check if position is empty
+    if (room.board[position] !== null) {
+      console.log('Position already taken:', position);
+      return;
+    }
+    
+    // Validate turn - check if it's the player's turn
+    if (room.currentTurn !== player) {
+      console.log('Not player turn:', player, 'current turn:', room.currentTurn);
+      return;
+    }
+    
+    // Find the player making the move
+    const currentPlayer = room.players.find(p => p.id === socket.id);
+    if (!currentPlayer) {
+      console.log('Player not found in room:', socket.id);
       return;
     }
     
@@ -1169,6 +1195,8 @@ io.on('connection', (socket) => {
         nextTurn: room.currentTurn
       });
     }
+    
+    console.log(`Move made in room ${roomId}: ${player} at position ${position}, next turn: ${room.currentTurn}`);
   });
   
   // Start Tic Tac Toe game manually
