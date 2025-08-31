@@ -5,11 +5,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../services/axios';
 import toast from 'react-hot-toast';
 import { getFullImageUrl, isValidImageUrl } from '../../utils/imageUtils';
-import { FaTrophy, FaFire, FaUsers, FaStar, FaBell, FaSearch, FaUser, FaComments, FaComment, FaShare, FaSignOutAlt, FaPlus, FaCrown, FaHeart, FaThumbsUp, FaLaugh, FaEllipsisV } from 'react-icons/fa';
+import { FaTrophy, FaFire, FaUsers, FaStar, FaBell, FaSearch, FaUser, FaComments, FaComment, FaShare, FaSignOutAlt, FaPlus, FaCrown, FaHeart, FaThumbsUp, FaLaugh, FaEllipsisV, FaHandPaper } from 'react-icons/fa';
 import CreatePost from './CreatePost';
 import PostComments from './PostComments';
 import Banner from './Banner';
 import ReportPostModal from '../common/ReportPostModal';
+import HandHUD from '../HandHUD/HandHUD';
 import './Home.css';
 
 const Home = () => {
@@ -35,6 +36,7 @@ const Home = () => {
   const [blockedUsers, setBlockedUsers] = useState(new Set());
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedPostForReport, setSelectedPostForReport] = useState(null);
+  const [showHandHUD, setShowHandHUD] = useState(false);
 
   // Function to format time since post creation
   const formatTimeAgo = (createdAt) => {
@@ -538,6 +540,13 @@ const Home = () => {
           </div>
           <div className="top-nav-buttons">
             <button 
+              className="nav-btn hand-hud-btn"
+              onClick={() => setShowHandHUD(true)}
+              title="Hand Tracking HUD"
+            >
+              <FaHandPaper /> <span className="btn-text">Hand HUD</span>
+            </button>
+            <button 
               className="nav-btn chat-btn"
               onClick={() => window.location.href = '/chat'}
             >
@@ -931,6 +940,12 @@ const Home = () => {
           postContent={selectedPostForReport.content}
         />
       )}
+
+      {/* Hand HUD Modal */}
+      <HandHUD
+        isOpen={showHandHUD}
+        onClose={() => setShowHandHUD(false)}
+      />
     </div>
   );
 };

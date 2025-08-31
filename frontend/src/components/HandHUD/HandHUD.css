@@ -1,0 +1,287 @@
+/* HandHUD.css - Hand Tracking HUD component styles */
+
+.hand-hud-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.hand-hud-container {
+  background: #0f1115;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  max-width: 1100px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hand-hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1a1d23 0%, #2d3748 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hand-hud-header h3 {
+  color: #e5e7eb;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.hand-hud-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #111827;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+}
+
+.control-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.control-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+}
+
+.control-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.control-btn.stop {
+  background: #dc2626;
+}
+
+.control-btn.stop:hover:not(:disabled) {
+  background: #b91c1c;
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+}
+
+.status-capsule,
+.gesture-capsule,
+.fps-capsule {
+  background: #111827;
+  border: 1px solid #374151;
+  color: #9ca3af;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.speed-capsule {
+  background: #111827;
+  border: 1px solid #374151;
+  color: #9ca3af;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.speed-capsule select {
+  background: transparent;
+  color: #e5e7eb;
+  border: none;
+  outline: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.speed-capsule select option {
+  background: #1f2937;
+  color: #e5e7eb;
+}
+
+.hand-hud-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #0b0d12;
+  overflow: hidden;
+}
+
+.hand-hud-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.hand-hud-hud {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  z-index: 5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hand-hud-overlay {
+    padding: 10px;
+  }
+  
+  .hand-hud-container {
+    border-radius: 16px;
+    max-height: 95vh;
+  }
+  
+  .hand-hud-header {
+    padding: 16px 20px;
+  }
+  
+  .hand-hud-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .hand-hud-controls {
+    padding: 16px 20px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .control-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .status-capsule,
+  .gesture-capsule,
+  .fps-capsule,
+  .speed-capsule {
+    text-align: center;
+    padding: 10px 16px;
+  }
+  
+  .hand-hud-stage {
+    aspect-ratio: 4/3;
+  }
+}
+
+@media (max-width: 480px) {
+  .hand-hud-header {
+    padding: 14px 16px;
+  }
+  
+  .hand-hud-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .hand-hud-controls {
+    padding: 14px 16px;
+  }
+  
+  .hand-hud-stage {
+    aspect-ratio: 1/1;
+  }
+  
+  .hand-hud-hud {
+    left: 12px;
+    bottom: 12px;
+  }
+}
+
+/* Animation for modal appearance */
+.hand-hud-overlay {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.hand-hud-container {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Custom scrollbar for the container */
+.hand-hud-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hand-hud-container::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.hand-hud-container::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.hand-hud-container::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
