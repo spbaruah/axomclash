@@ -851,6 +851,61 @@ io.on('connection', (socket) => {
     console.log(`Tic Tac Toe room ${roomId} created by ${player.username}`);
   });
 
+  // Find available Tic Tac Toe room
+  socket.on('find-tictactoe-room', (data) => {
+    const { player } = data;
+    
+    // Find a room that's waiting for players
+    let availableRoom = null;
+    for (const [roomId, room] of tictactoeRooms) {
+      if (room.status === 'waiting' && room.players.length === 1) {
+        availableRoom = room;
+        break;
+      }
+    }
+    
+    if (availableRoom) {
+      // Join the available room
+      availableRoom.players.push(player);
+      socket.join(availableRoom.id);
+      
+      // Notify all players in the room
+      io.to(availableRoom.id).emit('tictactoe-player-joined', { 
+        roomId: availableRoom.id, 
+        player 
+      });
+      
+      // Start the game since we now have 2 players
+      availableRoom.status = 'playing';
+      availableRoom.currentTurn = 'X';
+      
+      io.to(availableRoom.id).emit('tictactoe-game-start', { 
+        roomId: availableRoom.id, 
+        startingPlayer: 'X',
+        players: availableRoom.players 
+      });
+      
+      console.log(`Player ${player.username} joined available room ${availableRoom.id} and game started`);
+    } else {
+      // No available room, create a new one
+      const newRoomId = `ttt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newRoom = {
+        id: newRoomId,
+        players: [player],
+        status: 'waiting',
+        board: Array(9).fill(null),
+        currentTurn: 'X',
+        createdAt: new Date()
+      };
+      
+      tictactoeRooms.set(newRoomId, newRoom);
+      socket.join(newRoomId);
+      
+      socket.emit('tictactoe-room-created', { roomId: newRoomId, room: newRoom });
+      console.log(`New Tic Tac Toe room ${newRoomId} created by ${player.username}`);
+    }
+  });
+
   // Start solo Tic Tac Toe game with AI
   socket.on('start-solo-tictactoe', (data) => {
     const { difficulty, player } = data;
@@ -945,7 +1000,8 @@ io.on('connection', (socket) => {
       const winner = calculateTicTacToeWinner(room.board);
       if (winner || isTicTacToeBoardFull(room.board)) {
         room.status = 'finished';
-        socket.to(roomId).emit('solo-tictactoe-game-over', { 
+        // For solo games, emit to the same socket
+        socket.emit('solo-tictactoe-game-over', { 
           roomId, 
           winner: winner || 'tie', 
           board: room.board,
@@ -954,7 +1010,8 @@ io.on('connection', (socket) => {
       } else {
         // Switch back to player turn
         room.currentTurn = 'X';
-        socket.to(roomId).emit('solo-tictactoe-move-updated', { 
+        // For solo games, emit to the same socket
+        socket.emit('solo-tictactoe-move-updated', { 
           roomId, 
           position: move, 
           player: 'O',

@@ -114,12 +114,8 @@ const TicTacToe = ({ gameType, onBack }) => {
     setGameMode('online');
     setGameStatus('waiting');
     
-    // Create room and join
-    const newRoomId = `ttt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setRoomId(newRoomId);
-    
-    socket.emit('create-tictactoe-room', {
-      roomId: newRoomId,
+    // Use the find-tictactoe-room event for automatic matchmaking
+    socket.emit('find-tictactoe-room', {
       player: {
         id: userProfile?.id || 'anonymous',
         username: userProfile?.username || 'Player',
