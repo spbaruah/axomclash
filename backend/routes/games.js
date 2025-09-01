@@ -32,6 +32,17 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
+// Public health check endpoint - MUST be before /:gameId route
+router.get('/health', (req, res) => {
+  console.log('🎮 Health check endpoint accessed');
+  res.json({ 
+    status: 'healthy',
+    service: 'games-api',
+    timestamp: new Date().toISOString(),
+    message: 'Games API is running'
+  });
+});
+
 // Get active games
 router.get('/active', async (req, res) => {
   try {
