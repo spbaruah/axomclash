@@ -115,7 +115,11 @@ app.use('/api/users', userRoutes);
 app.use('/api/colleges', collegeRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
+
+console.log('🎮 Registering games routes at /api/games');
 app.use('/api/games', gameRoutes);
+console.log('✅ Games routes registered successfully');
+
 app.use('/api/chat', chatRoutes);
 
 app.use('/api/quiz', quizRoutes);

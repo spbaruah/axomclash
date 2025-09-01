@@ -2,6 +2,18 @@ const express = require('express');
 const db = require('../config/database');
 const router = express.Router();
 
+console.log('🎮 Games routes loaded - Game History endpoint available at /history');
+
+// Simple test endpoint
+router.get('/test', (req, res) => {
+  console.log('🎮 Test endpoint accessed');
+  res.json({ 
+    message: 'Games route is working!', 
+    timestamp: new Date().toISOString(),
+    routes: ['/test', '/history', '/active']
+  });
+});
+
 // Middleware to verify JWT token
 const verifyToken = async (req, res, next) => {
   try {
