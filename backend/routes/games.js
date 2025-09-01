@@ -196,6 +196,94 @@ router.post('/:gameId/join', verifyToken, async (req, res) => {
   }
 });
 
+// Get user's game history
+router.get('/history', verifyToken, async (req, res) => {
+  console.log('🎮 Game history endpoint accessed for user:', req.user.userId);
+  try {
+    const userId = req.user.userId;
+    
+    console.log('🔍 Testing database connection...');
+    // Test database connection first
+    await db.promise().execute('SELECT 1 as test');
+    console.log('✅ Database connection successful');
+    
+    console.log('🔍 Checking if tic_tac_toe_games table exists...');
+    // Check if table exists
+    const [tableCheck] = await db.promise().execute('SHOW TABLES LIKE "tic_tac_toe_games"');
+    console.log('📊 tic_tac_toe_games table exists:', tableCheck.length > 0);
+    
+    if (tableCheck.length === 0) {
+      console.log('⚠️ tic_tac_toe_games table does not exist, returning empty result');
+      return res.json({
+        success: true,
+        games: [],
+        total: 0,
+        ticTacToeCount: 0,
+        rpsCount: 0,
+        note: 'Database tables not found - please run migrations'
+      });
+    }
+    
+    // Get Tic Tac Toe games
+    console.log('🔍 Fetching Tic Tac Toe games for user:', userId);
+    const [ticTacToeGames] = await db.promise().execute(
+      `SELECT 
+        id, player1_id, player2_id, winner_id, status, points_at_stake, 
+        created_at, finished_at, 'tic_tac_toe' as game_type, 'Tic Tac Toe' as game_name
+       FROM tic_tac_toe_games 
+       WHERE (player1_id = ? OR player2_id = ?) AND status = 'finished'
+       ORDER BY finished_at DESC`,
+      [userId, userId]
+    );
+
+    // Get RPS games
+    const [rpsGames] = await db.promise().execute(
+      `SELECT 
+        id, room_id, players, scores, points_at_stake, status, 
+        created_at, updated_at, 'rps' as game_type, 'Rock Paper Scissors' as game_name
+       FROM rps_games 
+       WHERE JSON_CONTAINS(players, ?, '$.userId') AND status = 'finished'
+       ORDER BY updated_at DESC`,
+      [JSON.stringify({ userId: parseInt(userId) })]
+    );
+
+    // Format Tic Tac Toe games
+    const formattedTicTacToe = ticTacToeGames.map(game => ({
+      ...game,
+      game_date: game.finished_at || game.created_at,
+      result: game.winner_id === parseInt(userId) ? 'Won' : 
+              game.status === 'draw' ? 'Draw' : 'Lost',
+      opponent_id: game.player1_id === parseInt(userId) ? game.player2_id : game.player1_id
+    }));
+
+    // Format RPS games
+    const formattedRPS = rpsGames.map(game => ({
+      ...game,
+      game_date: game.updated_at || game.created_at,
+      result: game.winner_id === parseInt(userId) ? 'Won' : 'Lost',
+      opponent_id: null // RPS games have multiple players in JSON
+    }));
+
+    // Combine all games
+    const allGames = [...formattedTicTacToe, ...formattedRPS];
+    
+    // Sort by date (most recent first)
+    allGames.sort((a, b) => new Date(b.game_date) - new Date(a.game_date));
+
+    res.json({ 
+      success: true, 
+      games: allGames,
+      total: allGames.length,
+      ticTacToeCount: formattedTicTacToe.length,
+      rpsCount: formattedRPS.length
+    });
+    
+  } catch (error) {
+    console.error('Error in game history endpoint:', error);
+    res.status(500).json({ error: 'Failed to fetch game history' });
+  }
+});
+
 // Get game details
 router.get('/:gameId', async (req, res) => {
   try {
@@ -356,94 +444,4 @@ router.post('/:gameId/end', verifyToken, async (req, res) => {
   }
 });
 
- 
-
-// Get user's game history
-router.get('/history', verifyToken, async (req, res) => {
-  console.log('🎮 Game history endpoint accessed for user:', req.user.userId);
-  try {
-    const userId = req.user.userId;
-    
-    console.log('🔍 Testing database connection...');
-    // Test database connection first
-    await db.promise().execute('SELECT 1 as test');
-    console.log('✅ Database connection successful');
-    
-    console.log('🔍 Checking if tic_tac_toe_games table exists...');
-    // Check if table exists
-    const [tableCheck] = await db.promise().execute('SHOW TABLES LIKE "tic_tac_toe_games"');
-    console.log('📊 tic_tac_toe_games table exists:', tableCheck.length > 0);
-    
-    if (tableCheck.length === 0) {
-      console.log('⚠️ tic_tac_toe_games table does not exist, returning empty result');
-      return res.json({
-        success: true,
-        games: [],
-        total: 0,
-        ticTacToeCount: 0,
-        rpsCount: 0,
-        note: 'Database tables not found - please run migrations'
-      });
-    }
-    
-    // Get Tic Tac Toe games
-    console.log('🔍 Fetching Tic Tac Toe games for user:', userId);
-    const [ticTacToeGames] = await db.promise().execute(
-      `SELECT 
-        id, player1_id, player2_id, winner_id, status, points_at_stake, 
-        created_at, finished_at, 'tic_tac_toe' as game_type, 'Tic Tac Toe' as game_name
-       FROM tic_tac_toe_games 
-       WHERE (player1_id = ? OR player2_id = ?) AND status = 'finished'
-       ORDER BY finished_at DESC`,
-      [userId, userId]
-    );
-
-    // Get RPS games
-    const [rpsGames] = await db.promise().execute(
-      `SELECT 
-        id, room_id, players, scores, points_at_stake, status, 
-        created_at, updated_at, 'rps' as game_type, 'Rock Paper Scissors' as game_name
-       FROM rps_games 
-       WHERE JSON_CONTAINS(players, ?, '$.userId') AND status = 'finished'
-       ORDER BY updated_at DESC`,
-      [JSON.stringify({ userId: parseInt(userId) })]
-    );
-
-    // Format Tic Tac Toe games
-    const formattedTicTacToe = ticTacToeGames.map(game => ({
-      ...game,
-      game_date: game.finished_at || game.created_at,
-      result: game.winner_id === parseInt(userId) ? 'Won' : 
-              game.status === 'draw' ? 'Draw' : 'Lost',
-      opponent_id: game.player1_id === parseInt(userId) ? game.player2_id : game.player1_id
-    }));
-
-    // Format RPS games
-    const formattedRPS = rpsGames.map(game => ({
-      ...game,
-      game_date: game.updated_at || game.created_at,
-      result: game.winner_id === parseInt(userId) ? 'Won' : 'Lost',
-      opponent_id: null // RPS games have multiple players in JSON
-    }));
-
-    // Combine all games
-    const allGames = [...formattedTicTacToe, ...formattedRPS];
-    
-    // Sort by date (most recent first)
-    allGames.sort((a, b) => new Date(b.game_date) - new Date(a.game_date));
-
-    res.json({ 
-      success: true, 
-      games: allGames,
-      total: allGames.length,
-      ticTacToeCount: formattedTicTacToe.length,
-      rpsCount: formattedRPS.length
-    });
-    
-  } catch (error) {
-    console.error('Error in game history endpoint:', error);
-    res.status(500).json({ error: 'Failed to fetch game history' });
-  }
-});
-
-module.exports = router;
+ module.exports = router;
