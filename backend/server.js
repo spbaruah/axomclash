@@ -41,10 +41,19 @@ const chatRoutes = require('./routes/chat');
 
 const quizRoutes = require('./routes/quiz');
 const ludoRoomsRoutes = require('./routes/ludoRooms');
-const ludoRaceRoutes = require('./routes/ludoRace');
 const rpsRoutes = require('./routes/rps');
 const adminRoutes = require('./routes/admin');
 const bannerRoutes = require('./routes/banners');
+
+// Try to load ludoRace routes, but don't crash if it fails
+let ludoRaceRoutes = null;
+try {
+  ludoRaceRoutes = require('./routes/ludoRace');
+  console.log('✅ Ludo Race routes loaded successfully');
+} catch (error) {
+  console.warn('⚠️ Ludo Race routes not loaded:', error.message);
+  console.warn('Ludo Race game will not be available until database migration is complete');
+}
 
 // Import database connection
 const db = require('./config/database');
@@ -111,7 +120,20 @@ app.use('/api/chat', chatRoutes);
 
 app.use('/api/quiz', quizRoutes);
 app.use('/api/games/ludo-rooms', ludoRoomsRoutes);
-app.use('/api/games/ludo-race', ludoRaceRoutes);
+
+// Only register Ludo Race routes if they loaded successfully
+if (ludoRaceRoutes) {
+  app.use('/api/games/ludo-race', ludoRaceRoutes);
+  console.log('✅ Ludo Race API endpoints registered');
+} else {
+  // Provide a fallback endpoint that returns an error
+  app.use('/api/games/ludo-race', (req, res) => {
+    res.status(503).json({ 
+      error: 'Ludo Race game is temporarily unavailable',
+      message: 'Database migration required. Please contact administrator.'
+    });
+  });
+}
 app.use('/api/rps', rpsRoutes);
 app.use('/api/admin', adminRoutes);
 
@@ -1751,6 +1773,31 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    await db.execute('SELECT 1');
+    
+    // Check if Ludo Race tables exist
+    const [tables] = await db.execute('SHOW TABLES LIKE "ludo_race_%"');
+    
+    res.json({
+      status: 'healthy',
+      database: 'connected',
+      ludoRaceTables: tables.length,
+      ludoRaceAvailable: ludoRaceRoutes !== null,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
@@ -1758,14 +1805,34 @@ app.use('*', (req, res) => {
 
 const PORT = process.env.PORT || 10000;
 
-// Test database connection
-db.getConnection((err, connection) => {
+// Test database connection and run migrations
+db.getConnection(async (err, connection) => {
   if (err) {
     console.error('Database connection failed:', err);
     return;
   }
   console.log('Database connected successfully');
   connection.release();
+  
+  // Try to run Ludo Race migration
+  try {
+    const runMigration = require('./scripts/migrate-ludo-race');
+    await runMigration();
+    console.log('✅ Database migrations completed');
+    
+    // Now try to load Ludo Race routes again if they weren't loaded initially
+    if (!ludoRaceRoutes) {
+      try {
+        ludoRaceRoutes = require('./routes/ludoRace');
+        app.use('/api/games/ludo-race', ludoRaceRoutes);
+        console.log('✅ Ludo Race routes loaded after migration');
+      } catch (reloadError) {
+        console.warn('⚠️ Still cannot load Ludo Race routes:', reloadError.message);
+      }
+    }
+  } catch (migrationError) {
+    console.warn('⚠️ Migration failed, but server will continue:', migrationError.message);
+  }
   
   // Start server
   server.listen(PORT, () => {

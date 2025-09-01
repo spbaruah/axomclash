@@ -325,7 +325,13 @@ const Games = () => {
       }
     } catch (error) {
       console.error('Error creating Ludo Race room:', error);
-      toast.error('Failed to create game room');
+      
+      // Check if it's a service unavailable error
+      if (error.response?.status === 503) {
+        toast.error('🚧 Ludo Race is temporarily unavailable. Database migration in progress.');
+      } else {
+        toast.error('Failed to create game room. Please try again later.');
+      }
     } finally {
       setJoiningGame(false);
     }
