@@ -41,6 +41,7 @@ const chatRoutes = require('./routes/chat');
 
 const quizRoutes = require('./routes/quiz');
 const ludoRoomsRoutes = require('./routes/ludoRooms');
+const ludoRaceRoutes = require('./routes/ludoRace');
 const rpsRoutes = require('./routes/rps');
 const adminRoutes = require('./routes/admin');
 const bannerRoutes = require('./routes/banners');
@@ -110,6 +111,7 @@ app.use('/api/chat', chatRoutes);
 
 app.use('/api/quiz', quizRoutes);
 app.use('/api/games/ludo-rooms', ludoRoomsRoutes);
+app.use('/api/games/ludo-race', ludoRaceRoutes);
 app.use('/api/rps', rpsRoutes);
 app.use('/api/admin', adminRoutes);
 
@@ -1511,7 +1513,7 @@ io.on('connection', (socket) => {
         });
       }
 
-      // Notify all players of the result with both choices and outcomes
+      // Notify all players of the result with both choices and outcomespl
       io.to(playerRoom.id).emit('rpsGameResult', {
         result: result.result,
         score: playerRoom.scores,
@@ -1601,6 +1603,109 @@ io.on('connection', (socket) => {
     
     room.currentRound++;
   };
+
+  // Ludo Race socket handlers
+  socket.on('join-ludo-race-room', async (data) => {
+    try {
+      const { roomId, userId, username } = data;
+      console.log(`Player ${username} joining Ludo Race room ${roomId}`);
+      
+      // Join the socket room
+      socket.join(`ludo-race-${roomId}`);
+      
+      // Get room data from database
+      const [roomData] = await db.execute(`
+        SELECT r.*, COUNT(rp.id) as current_players
+        FROM ludo_race_rooms r
+        LEFT JOIN room_players rp ON r.id = rp.room_id
+        WHERE r.id = ?
+        GROUP BY r.id
+      `, [roomId]);
+      
+      if (roomData.length === 0) {
+        socket.emit('error', { message: 'Room not found' });
+        return;
+      }
+      
+      const room = roomData[0];
+      
+      // Check if room is full
+      if (room.current_players >= room.max_players) {
+        socket.emit('error', { message: 'Room is full' });
+        return;
+      }
+      
+      // Add player to room if not already there
+      const [existingPlayer] = await db.execute(`
+        SELECT id FROM room_players WHERE room_id = ? AND user_id = ?
+      `, [roomId, userId]);
+      
+      if (existingPlayer.length === 0) {
+        await db.execute(`
+          INSERT INTO room_players (room_id, user_id, joined_at, is_ready)
+          VALUES (?, ?, NOW(), true)
+        `, [roomId, userId]);
+      }
+      
+      // Get updated room with all players
+      const [updatedRoom] = await db.execute(`
+        SELECT 
+          r.*,
+          u.name as creator_name,
+          u.avatar as creator_avatar,
+          c.name as creator_college
+        FROM ludo_race_rooms r
+        JOIN users u ON r.creator_id = u.id
+        JOIN colleges c ON u.college_id = c.id
+        WHERE r.id = ?
+      `, [roomId]);
+      
+      const [players] = await db.execute(`
+        SELECT 
+          rp.id,
+          rp.user_id,
+          rp.joined_at,
+          rp.is_ready,
+          u.name,
+          u.avatar,
+          c.name as college,
+          c.id as college_id
+        FROM room_players rp
+        JOIN users u ON rp.user_id = u.id
+        JOIN colleges c ON u.college_id = c.id
+        WHERE rp.room_id = ?
+        ORDER BY rp.joined_at
+      `, [roomId]);
+      
+      const roomWithPlayers = {
+        ...updatedRoom[0],
+        players: players.map(player => ({
+          id: player.user_id,
+          name: player.name,
+          avatar: player.avatar || '👤',
+          college: player.college,
+          collegeId: player.college_id,
+          joinedAt: player.joined_at,
+          isReady: player.is_ready
+        }))
+      };
+      
+      // Notify all players in the room
+      io.to(`ludo-race-${roomId}`).emit('ludoRaceUpdate', { room: roomWithPlayers });
+      
+      // Notify about new player joining
+      io.to(`ludo-race-${roomId}`).emit('ludoRacePlayerJoined', { 
+        room: roomWithPlayers,
+        player: { username, userId }
+      });
+      
+      console.log(`Player ${username} joined Ludo Race room ${roomId}. Total players: ${players.length}`);
+      
+    } catch (error) {
+      console.error('Error joining Ludo Race room:', error);
+      socket.emit('error', { message: 'Failed to join room' });
+    }
+  });
 
   // Handle disconnection
   socket.on('disconnect', () => {

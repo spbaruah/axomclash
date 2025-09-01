@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import toast from 'react-hot-toast';
 import api from '../../services/axios';
-import LudoRoomSystem from './LudoRoomSystem';
+import LudoRaceGame from './LudoRaceGame';
 import TicTacToe from './TicTacToe';
 import RockPaperScissors from './RockPaperScissors';
 import BottomNavigation from '../common/BottomNavigation';
@@ -27,11 +27,11 @@ const Games = () => {
   const gameTypes = [
     {
       id: 'ludo',
-      name: 'Ludo Battle',
-      description: 'Classic Ludo game - 4 players, free for all, automatic room creation',
+      name: '🏁 Ludo Race',
+      description: '4-player race to finish - Get all 4 pieces home first to win!',
       icon: FaDice,
       players: 4,
-      duration: '15-20 min',
+      duration: '10-15 min',
       difficulty: 'Easy',
       reward: 150,
       color: '#FF6B6B',
@@ -198,6 +198,8 @@ const Games = () => {
       socket.on('playerJoined', handlePlayerJoined);
       socket.on('roomCreated', handleRoomCreated);
       socket.on('waitingForPlayers', handleWaitingForPlayers);
+      socket.on('ludoRaceUpdate', handleLudoRaceUpdate);
+      socket.on('ludoRacePlayerJoined', handleLudoRacePlayerJoined);
     }
 
     return () => {
@@ -208,6 +210,8 @@ const Games = () => {
         socket.off('playerJoined');
         socket.off('roomCreated');
         socket.off('waitingForPlayers');
+        socket.off('ludoRaceUpdate');
+        socket.off('ludoRacePlayerJoined');
       }
     };
   }, [socket]);
@@ -254,29 +258,74 @@ const Games = () => {
     toast(`Waiting for ${4 - data.players.length} more players...`);
   };
 
-  // Automatic room creation for Ludo
+  // Ludo Race specific handlers
+  const handleLudoRaceUpdate = (data) => {
+    if (data.room) {
+      setGameRoom(data.room);
+      toast.success('Game room updated!');
+    }
+  };
+
+  const handleLudoRacePlayerJoined = (data) => {
+    if (data.room) {
+      setGameRoom(data.room);
+      toast.success(`${data.player.username} joined the race!`);
+      
+      // Check if we have enough players to start
+      if (data.room.players.length >= 2) {
+        toast.success('Ready to start! Click Start Game when ready.');
+      }
+    }
+  };
+
+  // Handle game actions for Ludo Race
+  const handleGameAction = (action, data) => {
+    if (!socket) return;
+    
+    switch (action) {
+      case 'rollDice':
+        socket.emit('rollDice', data);
+        break;
+      case 'movePiece':
+        socket.emit('movePiece', data);
+        break;
+      case 'resetGame':
+        socket.emit('resetGame', data);
+        break;
+      default:
+        console.log('Unknown game action:', action);
+    }
+  };
+
+  // Automatic room creation for Ludo Race
   const joinLudoGame = async () => {
     try {
       setJoiningGame(true);
       
-      // Emit join request to socket
+      // Create a new Ludo Race room
+      const response = await api.post('/api/games/ludo-race', {
+        name: `🏁 Ludo Race - ${userProfile.college_name}`,
+        max_players: 4,
+        points_at_stake: 150
+      });
+      
+      toast.success('Ludo Race room created! Waiting for players...');
+      
+      // Set the game room
+      setSelectedGame(gameTypes.find(g => g.id === 'ludo'));
+      setGameRoom(response.data.room);
+      
+      // Join socket room
       if (socket) {
-        socket.emit('join-ludo-queue', {
+        socket.emit('join-ludo-race-room', {
+          roomId: response.data.room.id,
           userId: userProfile.id,
-          username: userProfile.username,
-          collegeId: userProfile.college_id,
-          collegeName: userProfile.college_name
+          username: userProfile.username
         });
-        
-        toast.success('Joining Ludo queue...');
-        
-        // Show waiting screen
-        setSelectedGame(gameTypes.find(g => g.id === 'ludo'));
-        setGameRoom({ status: 'waiting', type: 'ludo' });
       }
     } catch (error) {
-      console.error('Error joining Ludo game:', error);
-      toast.error('Failed to join game');
+      console.error('Error creating Ludo Race room:', error);
+      toast.error('Failed to create game room');
     } finally {
       setJoiningGame(false);
     }
@@ -342,11 +391,10 @@ const Games = () => {
 
     switch (selectedGame.id) {
       case 'ludo':
-        return <LudoRoomSystem 
-          onBack={() => setSelectedGame(null)} 
+                return <LudoRaceGame
           gameRoom={gameRoom}
-          waitingPlayers={waitingPlayers}
-          userProfile={userProfile}
+          currentPlayer={userProfile}
+          onGameAction={handleGameAction}
         />;
       case 'tictactoe':
         return <TicTacToe gameType={selectedGame} onBack={() => setSelectedGame(null)} />;
