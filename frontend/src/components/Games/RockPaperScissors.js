@@ -52,6 +52,13 @@ const RockPaperScissors = ({ gameType, onBack }) => {
   }, [socket]);
 
   const handleGameStart = (data) => {
+    const playersInRoom = data?.room?.players || [];
+    if (playersInRoom.length >= 2 && userProfile?.id) {
+      const opponent = playersInRoom.find(p => p.userId !== userProfile.id);
+      if (opponent) {
+        setOpponentInfo({ name: opponent.username || 'Opponent', avatar: opponent.avatar || null, userId: opponent.userId });
+      }
+    }
     setGameState('playing');
     setWaitingForOpponent(false);
     startCountdown();
@@ -82,9 +89,18 @@ const RockPaperScissors = ({ gameType, onBack }) => {
   };
 
   const handleOpponentJoined = (data) => {
-    setOpponentInfo(data.opponent);
-    setGameState('waiting');
-    startCountdown();
+    const playersInRoom = data?.room?.players || [];
+    if (playersInRoom.length >= 2 && userProfile?.id) {
+      const opponent = playersInRoom.find(p => p.userId !== userProfile.id);
+      if (opponent) {
+        setOpponentInfo({ name: opponent.username || 'Opponent', avatar: opponent.avatar || null, userId: opponent.userId });
+      }
+      setWaitingForOpponent(false);
+      setGameState('waiting');
+      startCountdown();
+    } else {
+      setWaitingForOpponent(true);
+    }
   };
 
   const handleGameEnd = (data) => {
@@ -120,13 +136,7 @@ const RockPaperScissors = ({ gameType, onBack }) => {
       setOpponentInfo({ name: 'AI Opponent', avatar: null });
       startCountdown();
     } else if (mode === 'friend') {
-      // Create room for friend
-      if (socket) {
-        socket.emit('rpsCreateRoom', { userId: userProfile.id, collegeId: userProfile.college_id });
-        setWaitingForOpponent(true);
-      }
-    } else if (mode === 'random') {
-      // Join random matchmaking
+      // Join matchmaking (auto pair with another player)
       if (socket) {
         socket.emit('rpsJoinMatchmaking', { userId: userProfile.id, collegeId: userProfile.college_id });
         setWaitingForOpponent(true);
@@ -279,28 +289,10 @@ const RockPaperScissors = ({ gameType, onBack }) => {
               <FaUserFriends size={40} />
             </div>
             <h3>Play with Friend</h3>
-            <p>Create a private room and invite your friend to join</p>
+            <p>Auto-match with another player from the lobby</p>
             <div className="mode-features">
               <span><FaUsers /> 2 Players</span>
-              <span><FaTrophy /> Private Room</span>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mode-card random-mode"
-            onClick={() => selectGameMode('random')}
-          >
-            <div className="mode-icon">
-              <FaUsers size={40} />
-            </div>
-            <h3>Random Match</h3>
-            <p>Find a random opponent from your college for a quick battle</p>
-            <div className="mode-features">
-              <span><FaUsers /> 2 Players</span>
-              <span><FaTrophy /> College Battle</span>
+              <span><FaTrophy /> Quick Match</span>
             </div>
           </motion.div>
         </div>
