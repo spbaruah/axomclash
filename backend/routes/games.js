@@ -299,16 +299,57 @@ router.get('/history', verifyToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     
-    // For now, return a simple response to test if the endpoint is working
-    // We'll add actual game data later once we confirm the endpoint is accessible
+    // Get Tic Tac Toe games
+    const [ticTacToeGames] = await db.promise().execute(
+      `SELECT 
+        id, player1_id, player2_id, winner_id, status, points_at_stake, 
+        created_at, finished_at, 'tic_tac_toe' as game_type, 'Tic Tac Toe' as game_name
+       FROM tic_tac_toe_games 
+       WHERE (player1_id = ? OR player2_id = ?) AND status = 'finished'
+       ORDER BY finished_at DESC`,
+      [userId, userId]
+    );
+
+    // Get RPS games
+    const [rpsGames] = await db.promise().execute(
+      `SELECT 
+        id, room_id, players, scores, points_at_stake, status, 
+        created_at, updated_at, 'rps' as game_type, 'Rock Paper Scissors' as game_name
+       FROM rps_games 
+       WHERE JSON_CONTAINS(players, ?, '$.userId') AND status = 'finished'
+       ORDER BY updated_at DESC`,
+      [JSON.stringify({ userId: parseInt(userId) })]
+    );
+
+    // Format Tic Tac Toe games
+    const formattedTicTacToe = ticTacToeGames.map(game => ({
+      ...game,
+      game_date: game.finished_at || game.created_at,
+      result: game.winner_id === parseInt(userId) ? 'Won' : 
+              game.status === 'draw' ? 'Draw' : 'Lost',
+      opponent_id: game.player1_id === parseInt(userId) ? game.player2_id : game.player1_id
+    }));
+
+    // Format RPS games
+    const formattedRPS = rpsGames.map(game => ({
+      ...game,
+      game_date: game.updated_at || game.created_at,
+      result: game.winner_id === parseInt(userId) ? 'Won' : 'Lost',
+      opponent_id: null // RPS games have multiple players in JSON
+    }));
+
+    // Combine all games
+    const allGames = [...formattedTicTacToe, ...formattedRPS];
     
+    // Sort by date (most recent first)
+    allGames.sort((a, b) => new Date(b.game_date) - new Date(a.game_date));
+
     res.json({ 
       success: true, 
-      message: 'Game history endpoint is working!',
-      userId: userId,
-      games: [],
-      total: 0,
-      note: 'Currently supporting Tic Tac Toe and Rock Paper Scissors games'
+      games: allGames,
+      total: allGames.length,
+      ticTacToeCount: formattedTicTacToe.length,
+      rpsCount: formattedRPS.length
     });
     
   } catch (error) {
