@@ -6,26 +6,35 @@ const router = express.Router();
 // Middleware to verify JWT token
 const verifyToken = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split('Bearer ')[1];
     if (!token) {
+      console.log('❌ No token provided in headers');
       return res.status(401).json({ message: 'Access token required' });
     }
 
+    console.log('🔑 Token received:', token.substring(0, 20) + '...');
+    console.log('🔐 JWT_SECRET available:', !!process.env.JWT_SECRET);
+    
     // Verify token and get user data
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    console.log('✅ Token decoded successfully:', { userId: decoded.userId, username: decoded.username });
+    
     const [user] = await db.execute(
       'SELECT id, full_name, email, college_id, profile_picture FROM users WHERE id = ?',
       [decoded.userId]
     );
 
     if (!user[0]) {
+      console.log('❌ User not found in database for ID:', decoded.userId);
       return res.status(401).json({ message: 'Invalid token' });
     }
 
+    console.log('✅ User found:', { id: user[0].id, name: user[0].full_name });
     req.user = user[0];
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid token' });
+    console.error('❌ Token verification failed:', error.message);
+    return res.status(401).json({ message: 'Invalid token', details: error.message });
   }
 };
 
