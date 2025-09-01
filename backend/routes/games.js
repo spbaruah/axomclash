@@ -4,6 +4,16 @@ const router = express.Router();
 
 console.log('🎮 Games routes loaded - Game History endpoint available at /history');
 
+// Debug route to test router
+router.get('/debug', (req, res) => {
+  console.log('🎮 Debug route accessed');
+  res.json({ 
+    message: 'Router is working!',
+    routes: ['/test', '/health', '/db-test', '/debug', '/history', '/active'],
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Simple test endpoint
 router.get('/test', (req, res) => {
   console.log('🎮 Test endpoint accessed');
