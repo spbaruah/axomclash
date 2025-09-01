@@ -71,6 +71,7 @@ const RockPaperScissors = ({ gameType, onBack }) => {
 
   const handleGameResult = (data) => {
     try {
+      console.log('RPS Game Result received:', data);
       const myUserId = userProfile?.id;
       // Determine opponent user id from opponentInfo or data.choices
       let oppUserId = opponentInfo?.userId || null;
@@ -145,6 +146,7 @@ const RockPaperScissors = ({ gameType, onBack }) => {
 
   const handleGameEnd = (data) => {
     try {
+      console.log('RPS Game End received:', data);
       const myUserId = userProfile?.id;
       const oppUserId = opponentInfo?.userId || null;
       if (data.finalScore && myUserId && oppUserId) {
@@ -444,7 +446,7 @@ const RockPaperScissors = ({ gameType, onBack }) => {
         <h1>🎯 Rock Paper Scissors</h1>
         <div className="game-info">
           <span className="mode-badge">{gameMode === 'ai' ? 'AI Mode' : 'Multiplayer'}</span>
-          <span className="round-counter">Round {rounds + 1}/{maxRounds}</span>
+          <span className="round-counter">Round {rounds}/{maxRounds}</span>
         </div>
       </div>
 

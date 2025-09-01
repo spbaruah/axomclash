@@ -1489,6 +1489,9 @@ io.on('connection', (socket) => {
       // Calculate round result
       const result = calculateRPSResult(playerRoom.players);
       
+      // Get the round number BEFORE updating (since updateRPSGameState increments it)
+      const currentRoundNumber = playerRoom.currentRound;
+      
       // Update scores and history
       updateRPSGameState(playerRoom, result);
       
@@ -1512,15 +1515,15 @@ io.on('connection', (socket) => {
       io.to(playerRoom.id).emit('rpsGameResult', {
         result: result.result,
         score: playerRoom.scores,
-        rounds: playerRoom.currentRound,
+        rounds: currentRoundNumber,
         history: playerRoom.history,
         choices: choicesList,
         outcomeByUser: outcomeByUser,
-        isGameFinished: playerRoom.currentRound >= playerRoom.maxRounds
+        isGameFinished: currentRoundNumber >= playerRoom.maxRounds
       });
       
       // Check if game is over
-      if (playerRoom.currentRound >= playerRoom.maxRounds) {
+      if (currentRoundNumber >= playerRoom.maxRounds) {
         playerRoom.status = 'finished';
         io.to(playerRoom.id).emit('rpsGameEnd', {
           finalScore: playerRoom.scores,
