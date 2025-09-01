@@ -1472,11 +1472,14 @@ io.on('connection', (socket) => {
     }
     
     if (!playerRoom) return;
+    // Ignore inputs if game already finished
+    if (playerRoom.status === 'finished') return;
     
     // Record player's choice
     const player = playerRoom.players.find(p => p.userId === userId);
     if (player) {
-      player.choice = choice;
+      // Store only the choice id (rock|paper|scissors)
+      player.choice = typeof choice === 'string' ? choice : (choice && choice.id ? choice.id : null);
     }
     
     // Check if all players have made choices
@@ -1489,12 +1492,30 @@ io.on('connection', (socket) => {
       // Update scores and history
       updateRPSGameState(playerRoom, result);
       
-      // Notify all players of the result
+      // Build per-user choices and outcomes
+      const choicesList = playerRoom.players.map(p => ({ userId: p.userId, choice: p.choice }));
+      const outcomeByUser = {};
+      if (result.result === 'tie') {
+        playerRoom.players.forEach(p => { outcomeByUser[p.userId] = 'tie'; });
+      } else {
+        let winningChoice = null;
+        if (result.result === 'rock_wins') winningChoice = 'rock';
+        if (result.result === 'paper_wins') winningChoice = 'paper';
+        if (result.result === 'scissors_wins') winningChoice = 'scissors';
+        const winners = playerRoom.players.filter(p => p.choice === winningChoice).map(p => p.userId);
+        playerRoom.players.forEach(p => {
+          outcomeByUser[p.userId] = winners.includes(p.userId) ? 'win' : 'lose';
+        });
+      }
+
+      // Notify all players of the result with both choices and outcomes
       io.to(playerRoom.id).emit('rpsGameResult', {
         result: result.result,
         score: playerRoom.scores,
         rounds: playerRoom.currentRound,
-        history: playerRoom.history
+        history: playerRoom.history,
+        choices: choicesList,
+        outcomeByUser: outcomeByUser
       });
       
       // Check if game is over
@@ -1504,6 +1525,12 @@ io.on('connection', (socket) => {
           finalScore: playerRoom.scores,
           history: playerRoom.history
         });
+        // Optionally clean up the room after a short delay
+        setTimeout(() => {
+          if (global.rpsRooms && global.rpsRooms.has(playerRoom.id)) {
+            global.rpsRooms.delete(playerRoom.id);
+          }
+        }, 10000);
       } else {
         // Reset for next round
         playerRoom.players.forEach(p => p.choice = null);
@@ -1522,6 +1549,7 @@ io.on('connection', (socket) => {
 
   // Helper functions for RPS
   const calculateRPSResult = (players) => {
+    // choices are strings: 'rock' | 'paper' | 'scissors'
     const choices = players.map(p => p.choice);
     const uniqueChoices = [...new Set(choices)];
     

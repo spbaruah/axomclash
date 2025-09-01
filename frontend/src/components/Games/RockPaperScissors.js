@@ -70,22 +70,62 @@ const RockPaperScissors = ({ gameType, onBack }) => {
   };
 
   const handleGameResult = (data) => {
-    setGameResult(data.result);
-    setScore(data.score);
-    setRounds(data.rounds);
-    setGameHistory(data.history);
-    
-    setTimeout(() => {
-      setPlayerChoice(null);
-      setOpponentChoice(null);
-      setGameResult(null);
-      if (data.rounds < maxRounds) {
-        setGameState('waiting');
-        startCountdown();
-      } else {
-        setGameState('finished');
+    try {
+      const myUserId = userProfile?.id;
+      // Determine opponent user id from opponentInfo or data.choices
+      let oppUserId = opponentInfo?.userId || null;
+      if (!oppUserId && Array.isArray(data.choices)) {
+        const ids = data.choices.map(c => c.userId);
+        oppUserId = ids.find(id => id !== myUserId) || null;
       }
-    }, 3000);
+
+      // Map server score keyed by userId to local player/opponent
+      if (data.score && myUserId && oppUserId) {
+        const myScore = data.score[myUserId] || 0;
+        const oppScore = data.score[oppUserId] || 0;
+        setScore({ player: myScore, opponent: oppScore });
+      }
+
+      // Extract choices and set display
+      if (Array.isArray(data.choices)) {
+        const myChoiceId = data.choices.find(c => c.userId === myUserId)?.choice || null;
+        const oppChoiceId = data.choices.find(c => c.userId === oppUserId)?.choice || null;
+        const myChoiceObj = myChoiceId ? choices.find(c => c.id === myChoiceId) : null;
+        const oppChoiceObj = oppChoiceId ? choices.find(c => c.id === oppChoiceId) : null;
+        if (myChoiceObj) setPlayerChoice(myChoiceObj);
+        if (oppChoiceObj) setOpponentChoice(oppChoiceObj);
+
+        // Append to local round history in UI-friendly format
+        if (myChoiceId && oppChoiceId) {
+          const myOutcome = data.outcomeByUser && myUserId ? data.outcomeByUser[myUserId] : null;
+          const outcome = myOutcome || 'tie';
+          setGameHistory(prev => [...prev, {
+            round: data.rounds,
+            result: outcome,
+            playerChoice: myChoiceId,
+            opponentChoice: oppChoiceId
+          }]);
+          setGameResult(outcome);
+        }
+      }
+
+      setRounds(data.rounds);
+      setWaitingForOpponent(false);
+
+      setTimeout(() => {
+        setPlayerChoice(null);
+        setOpponentChoice(null);
+        setGameResult(null);
+        if (data.rounds < maxRounds) {
+          setGameState('waiting');
+          startCountdown();
+        } else {
+          setGameState('finished');
+        }
+      }, 3000);
+    } catch (e) {
+      console.error('Error handling RPS game result:', e);
+    }
   };
 
   const handleOpponentJoined = (data) => {
@@ -104,9 +144,21 @@ const RockPaperScissors = ({ gameType, onBack }) => {
   };
 
   const handleGameEnd = (data) => {
-    setGameState('finished');
-    setScore(data.finalScore);
-    setGameHistory(data.history);
+    try {
+      const myUserId = userProfile?.id;
+      const oppUserId = opponentInfo?.userId || null;
+      if (data.finalScore && myUserId && oppUserId) {
+        setScore({
+          player: data.finalScore[myUserId] || 0,
+          opponent: data.finalScore[oppUserId] || 0
+        });
+      }
+      // Keep the locally built UI-friendly history
+      setGameState('finished');
+    } catch (e) {
+      console.error('Error handling RPS game end:', e);
+      setGameState('finished');
+    }
   };
 
   const startCountdown = () => {
