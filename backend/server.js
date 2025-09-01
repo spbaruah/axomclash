@@ -1673,8 +1673,8 @@ io.on('connection', (socket) => {
       const [updatedRoom] = await db.execute(`
         SELECT 
           r.*,
-          u.name as creator_name,
-          u.avatar as creator_avatar,
+          u.full_name as creator_name,
+          u.profile_picture as creator_avatar,
           c.name as creator_college
         FROM ludo_race_rooms r
         JOIN users u ON r.creator_id = u.id
@@ -1688,8 +1688,8 @@ io.on('connection', (socket) => {
           rp.user_id,
           rp.joined_at,
           rp.is_ready,
-          u.name,
-          u.avatar,
+          u.full_name,
+          u.profile_picture,
           c.name as college,
           c.id as college_id
         FROM room_players rp
@@ -1703,8 +1703,8 @@ io.on('connection', (socket) => {
         ...updatedRoom[0],
         players: players.map(player => ({
           id: player.user_id,
-          name: player.name,
-          avatar: player.avatar || '👤',
+          name: player.full_name,
+          avatar: player.profile_picture || '👤',
           college: player.college,
           collegeId: player.college_id,
           joinedAt: player.joined_at,

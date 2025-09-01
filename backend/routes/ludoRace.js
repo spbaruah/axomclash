@@ -14,7 +14,7 @@ const verifyToken = async (req, res, next) => {
     // Verify token and get user data
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const [user] = await db.execute(
-      'SELECT id, name, email, college_id, avatar FROM users WHERE id = ?',
+      'SELECT id, full_name, email, college_id, profile_picture FROM users WHERE id = ?',
       [decoded.userId]
     );
 
@@ -42,8 +42,8 @@ router.get('/', async (req, res) => {
         r.ended_at,
         r.winner_id,
         r.creator_id,
-        u.name as creator_name,
-        u.avatar as creator_avatar,
+        u.full_name as creator_name,
+        u.profile_picture as creator_avatar,
         c.name as creator_college,
         COUNT(rp.id) as player_count
       FROM ludo_race_rooms r
@@ -64,8 +64,8 @@ router.get('/', async (req, res) => {
             rp.user_id,
             rp.joined_at,
             rp.is_ready,
-            u.name,
-            u.avatar,
+            u.full_name,
+            u.profile_picture,
             c.name as college,
             c.id as college_id
           FROM room_players rp
@@ -79,8 +79,8 @@ router.get('/', async (req, res) => {
           ...room,
           players: players.map(player => ({
             id: player.user_id,
-            name: player.name,
-            avatar: player.avatar || '👤',
+            name: player.full_name,
+            avatar: player.profile_picture || '👤',
             college: player.college,
             collegeId: player.college_id,
             joinedAt: player.joined_at,
@@ -130,8 +130,8 @@ router.post('/', verifyToken, async (req, res) => {
     const [roomData] = await db.execute(`
       SELECT 
         r.*,
-        u.name as creator_name,
-        u.avatar as creator_avatar,
+        u.full_name as creator_name,
+        u.profile_picture as creator_avatar,
         c.name as creator_college
       FROM ludo_race_rooms r
       JOIN users u ON r.creator_id = u.id
@@ -143,8 +143,8 @@ router.post('/', verifyToken, async (req, res) => {
       ...roomData[0],
       players: [{
         id: req.user.id,
-        name: req.user.name,
-        avatar: req.user.avatar || '👤',
+        name: req.user.full_name,
+        avatar: req.user.profile_picture || '👤',
         college: roomData[0].creator_college,
         collegeId: req.user.college_id,
         joinedAt: new Date(),
@@ -209,8 +209,8 @@ router.post('/:roomId/join', verifyToken, async (req, res) => {
     const [updatedRoom] = await db.execute(`
       SELECT 
         r.*,
-        u.name as creator_name,
-        u.avatar as creator_avatar,
+        u.full_name as creator_name,
+        u.profile_picture as creator_avatar,
         c.name as creator_college
       FROM ludo_race_rooms r
       JOIN users u ON r.creator_id = u.id
@@ -224,8 +224,8 @@ router.post('/:roomId/join', verifyToken, async (req, res) => {
         rp.user_id,
         rp.joined_at,
         rp.is_ready,
-        u.name,
-        u.avatar,
+        u.full_name,
+        u.profile_picture,
         c.name as college,
         c.id as college_id
       FROM room_players rp
@@ -239,8 +239,8 @@ router.post('/:roomId/join', verifyToken, async (req, res) => {
       ...updatedRoom[0],
       players: players.map(player => ({
         id: player.user_id,
-        name: player.name,
-        avatar: player.avatar || '👤',
+        name: player.full_name,
+        avatar: player.profile_picture || '👤',
         college: player.college,
         collegeId: player.college_id,
         joinedAt: player.joined_at,
@@ -299,8 +299,8 @@ router.get('/:roomId', async (req, res) => {
     const [roomData] = await db.execute(`
       SELECT 
         r.*,
-        u.name as creator_name,
-        u.avatar as creator_avatar,
+        u.full_name as creator_name,
+        u.profile_picture as creator_avatar,
         c.name as creator_college
       FROM ludo_race_rooms r
       JOIN users u ON r.creator_id = u.id
@@ -318,8 +318,8 @@ router.get('/:roomId', async (req, res) => {
         rp.user_id,
         rp.joined_at,
         rp.is_ready,
-        u.name,
-        u.avatar,
+        u.full_name,
+        u.profile_picture,
         c.name as college,
         c.id as college_id
       FROM room_players rp
@@ -333,8 +333,8 @@ router.get('/:roomId', async (req, res) => {
       ...roomData[0],
       players: players.map(player => ({
         id: player.user_id,
-        name: player.name,
-        avatar: player.avatar || '👤',
+        name: player.full_name,
+        avatar: player.profile_picture || '👤',
         college: player.college,
         collegeId: player.college_id,
         joinedAt: player.joined_at,

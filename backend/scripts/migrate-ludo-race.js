@@ -10,11 +10,11 @@ async function runMigration() {
     const migrationPath = path.join(__dirname, '../migrations/001_create_ludo_race_tables.sql');
     const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
 
-    // Split the SQL into individual statements
+    // Split the SQL into individual statements and filter out comments
     const statements = migrationSQL
       .split(';')
       .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0);
+      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
 
     // Execute each statement
     for (const statement of statements) {
@@ -35,8 +35,12 @@ async function runMigration() {
     console.log('🎉 Migration completed successfully!');
     
     // Test the tables by running a simple query
-    const [result] = await db.execute('SHOW TABLES LIKE "ludo_race_%"');
-    console.log(`📊 Created ${result.length} Ludo Race tables`);
+    try {
+      const [result] = await db.execute('SHOW TABLES LIKE "ludo_race_%"');
+      console.log(`📊 Created ${result.length} Ludo Race tables`);
+    } catch (error) {
+      console.warn('Could not verify table creation:', error.message);
+    }
     
     return true;
   } catch (error) {
