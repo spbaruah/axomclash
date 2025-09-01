@@ -76,6 +76,119 @@ const Games = () => {
 
   ];
 
+  const upcomingGames = [
+    {
+      id: 'emoji-battle',
+      name: 'Emoji Battle',
+      description: 'Each player picks an emoji "fighter" (🔥💧🌱⚡ etc.), with unique strengths/weaknesses. Fire beats Plant, Plant beats Water, etc.',
+      icon: '😎⚡',
+      color: '#FF9F43',
+      players: '2',
+      duration: '2-3 min',
+      difficulty: 'Easy',
+      status: 'Coming Soon'
+    },
+    {
+      id: 'tap-speed-duel',
+      name: 'Tap Speed Duel',
+      description: 'Both players tap as fast as they can in 5 seconds, the one with the higher count wins.',
+      icon: '⏱',
+      color: '#5F27CD',
+      players: '2',
+      duration: '5-10 sec',
+      difficulty: 'Easy',
+      status: 'Coming Soon'
+    },
+    {
+      id: 'gesture-match',
+      name: 'Gesture Match',
+      description: 'Instead of just Rock-Paper-Scissors, add more gestures (Spock 🖖, Lizard 🦎, etc.), or even camera-based hand recognition.',
+      icon: '✋✊✌',
+      color: '#00D2D3',
+      players: '2',
+      duration: '1-2 min',
+      difficulty: 'Medium',
+      status: 'Coming Soon'
+    },
+    {
+      id: 'color-dash',
+      name: 'Color Dash',
+      description: 'A random color name shows up, but in a different text color (like "RED" written in blue). You must tap the correct color fast.',
+      icon: '🎨',
+      color: '#FF6B6B',
+      players: '2',
+      duration: '30-60 sec',
+      difficulty: 'Medium',
+      status: 'Coming Soon'
+    },
+    {
+      id: 'memory-flip',
+      name: 'Memory Flip Challenge',
+      description: 'Cards flash for a second, then hide. You must recall and tap their order.',
+      icon: '🃏',
+      color: '#26DE81',
+      players: '2',
+      duration: '2-3 min',
+      difficulty: 'Hard',
+      status: 'Coming Soon'
+    },
+    {
+      id: 'quick-draw',
+      name: 'Quick Draw Duel',
+      description: 'Two players wait for "FIRE!" signal. Whoever taps first after the signal wins (but tapping early = disqualified).',
+      icon: '🤠🔫',
+      color: '#FC427B',
+      players: '2',
+      duration: '10-30 sec',
+      difficulty: 'Medium',
+      status: 'Coming Soon'
+    },
+    {
+      id: 'shape-builder',
+      name: 'Shape Builder',
+      description: 'Random shapes drop (like mini Tetris pieces), players compete to place them faster or form a pattern.',
+      icon: '🔺⚪',
+      color: '#A55EEA',
+      players: '2',
+      duration: '3-5 min',
+      difficulty: 'Hard',
+      status: 'Coming Soon'
+    },
+    {
+      id: 'guess-sound',
+      name: 'Guess the Sound',
+      description: 'Short sound plays (clap, animal, beep), and players must guess it quickly.',
+      icon: '🎶',
+      color: '#FD79A8',
+      players: '2',
+      duration: '1-2 min',
+      difficulty: 'Medium',
+      status: 'Coming Soon'
+    },
+    {
+      id: 'chain-reaction',
+      name: 'Chain Reaction',
+      description: 'Tap a ball and watch it explode into smaller ones; timing matters to catch more.',
+      icon: '💥',
+      color: '#FDCB6E',
+      players: '2',
+      duration: '2-3 min',
+      difficulty: 'Medium',
+      status: 'Coming Soon'
+    },
+    {
+      id: 'truth-dare',
+      name: 'Truth or Dare Wheel',
+      description: 'A spinner game where players get quick fun dares or questions.',
+      icon: '🎡',
+      color: '#6C5CE7',
+      players: '2-4',
+      duration: '5-10 min',
+      difficulty: 'Easy',
+      status: 'Coming Soon'
+    }
+  ];
+
   useEffect(() => {
     fetchGames();
     if (socket) {
@@ -283,16 +396,10 @@ const Games = () => {
           Available Games
         </button>
         <button
-          className={`tab-btn ${activeTab === 'active' ? 'active' : ''}`}
-          onClick={() => setActiveTab('active')}
+          className={`tab-btn ${activeTab === 'upcoming' ? 'active' : ''}`}
+          onClick={() => setActiveTab('upcoming')}
         >
-          Active Games
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
-          onClick={() => setActiveTab('completed')}
-        >
-          Completed
+          Upcoming
         </button>
       </motion.div>
 
@@ -357,54 +464,32 @@ const Games = () => {
           </div>
         )}
 
-        {activeTab === 'active' && (
-          <div className="active-games">
-            {loading ? (
-              <div className="loading">Loading active games...</div>
-            ) : availableGames.length === 0 ? (
-              <div className="no-games">
-                <p>No active games at the moment.</p>
-                <p>Join a game or wait for others to join!</p>
-              </div>
-            ) : (
-              availableGames.map((game, index) => (
-                <motion.div
-                  key={game.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="active-game-card"
-                >
-                  <div className="game-info">
-                    <h3>{game.name}</h3>
-                    <p>{game.current_players}/{game.max_players} players</p>
-                    <span className="game-type">{game.type}</span>
-                  </div>
-                  <div className="game-status">
-                    <span className={`status ${game.status}`}>{game.status}</span>
-                    <span className="points">{game.points_at_stake} points at stake</span>
-                  </div>
-                  <div className="game-actions">
-                    <button 
-                      className="join-btn"
-                      onClick={() => joinGame(game.id)}
-                      disabled={loading}
-                    >
-                      Join Game
-                    </button>
-                  </div>
-                </motion.div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'completed' && (
-          <div className="completed-games">
-            <div className="no-games">
-              <p>No completed games yet.</p>
-              <p>Start playing to see your results here!</p>
-            </div>
+        {activeTab === 'upcoming' && (
+          <div className="games-grid">
+            {upcomingGames.map((game, index) => (
+              <motion.div
+                key={game.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="game-card upcoming"
+                style={{ borderColor: game.color }}
+              >
+                <div className="game-icon upcoming-icon" style={{ color: game.color }}>
+                  <span className="emoji-icon">{game.icon}</span>
+                </div>
+                <h3>{game.name}</h3>
+                <p>{game.description}</p>
+                <div className="game-stats">
+                  <span><FaUsers /> {game.players} players</span>
+                  <span><FaClock /> {game.duration}</span>
+                  <span><FaStar /> {game.difficulty}</span>
+                </div>
+                <div className="game-status">
+                  <span className="coming-soon-badge">{game.status}</span>
+                </div>
+              </motion.div>
+            ))}
           </div>
         )}
       </motion.div>
