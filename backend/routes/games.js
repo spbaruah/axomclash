@@ -293,6 +293,7 @@ router.post('/:gameId/end', verifyToken, async (req, res) => {
 
 // Get user's game history
 router.get('/history', verifyToken, async (req, res) => {
+  console.log('🎮 Game history endpoint accessed for user:', req.user.userId);
   try {
     const userId = req.user.userId;
     
