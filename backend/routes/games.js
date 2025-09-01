@@ -291,6 +291,12 @@ router.post('/:gameId/end', verifyToken, async (req, res) => {
   }
 });
 
+// Test endpoint to verify routing
+router.get('/test', (req, res) => {
+  console.log('🎮 Test endpoint accessed');
+  res.json({ message: 'Games route is working!', timestamp: new Date().toISOString() });
+});
+
 // Get user's game history
 router.get('/history', verifyToken, async (req, res) => {
   console.log('🎮 Game history endpoint accessed for user:', req.user.userId);
