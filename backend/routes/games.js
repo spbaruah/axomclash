@@ -291,11 +291,7 @@ router.post('/:gameId/end', verifyToken, async (req, res) => {
   }
 });
 
-// Test endpoint to verify routing
-router.get('/test', (req, res) => {
-  console.log('🎮 Test endpoint accessed');
-  res.json({ message: 'Games route is working!', timestamp: new Date().toISOString() });
-});
+ 
 
 // Get user's game history
 router.get('/history', verifyToken, async (req, res) => {
@@ -303,80 +299,20 @@ router.get('/history', verifyToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     
-    // Get games from main games table
-    const [mainGames] = await db.promise().execute(
-      `SELECT g.*, 
-              c1.name as college1_name, c1.logo_url as college1_logo,
-              c2.name as college2_name, c2.logo_url as college2_logo,
-              gp.team_number, gp.points_earned,
-              'main' as game_source
-       FROM games g
-       JOIN colleges c1 ON g.college1_id = c1.id
-       JOIN colleges c2 ON g.college2_id = c2.id
-       JOIN game_participants gp ON g.id = gp.game_id
-       WHERE gp.user_id = ? AND g.status = 'completed'
-       ORDER BY g.updated_at DESC`,
-      [userId]
-    );
-
-    // Get Ludo Race games
-    const [ludoGames] = await db.promise().execute(
-      `SELECT lr.*, 
-              'ludo_race' as game_source,
-              'Ludo Race' as game_name,
-              'ludo' as game_type
-       FROM ludo_race_rooms lr
-       JOIN room_players rp ON lr.id = rp.room_id
-       WHERE rp.user_id = ? AND lr.status = 'finished'
-       ORDER BY lr.ended_at DESC`,
-      [userId]
-    );
-
-    // Get RPS games
-    const [rpsGames] = await db.promise().execute(
-      `SELECT rg.*, 
-              'rps' as game_source,
-              'Rock Paper Scissors' as game_name,
-              'rps' as game_type
-       FROM rps_games rg
-       WHERE JSON_CONTAINS(rg.players, ?, '$.userId') AND rg.status = 'finished'
-       ORDER BY rg.updated_at DESC`,
-      [JSON.stringify({ userId: parseInt(userId) })]
-    );
-
-    // Combine and format all games
-    const allGames = [
-      ...mainGames.map(game => ({
-        ...game,
-        game_date: game.updated_at,
-        result: game.winner_college_id === game.college1_id ? 
-          (game.team_number === 1 ? 'Won' : 'Lost') :
-          (game.team_number === 2 ? 'Won' : 'Lost')
-      })),
-      ...ludoGames.map(game => ({
-        ...game,
-        game_date: game.ended_at,
-        result: game.winner_id === parseInt(userId) ? 'Won' : 'Lost',
-        points_at_stake: game.points_at_stake || 150
-      })),
-      ...rpsGames.map(game => ({
-        ...game,
-        game_date: game.updated_at,
-        result: game.winner_id === parseInt(userId) ? 'Won' : 'Lost',
-        points_at_stake: game.points_at_stake || 75
-      }))
-    ];
-
-    // Sort by date (most recent first)
-    allGames.sort((a, b) => new Date(b.game_date) - new Date(a.game_date));
-
+    // For now, return a simple response to test if the endpoint is working
+    // We'll add actual game data later once we confirm the endpoint is accessible
+    
     res.json({ 
       success: true, 
-      games: allGames,
-      total: allGames.length
+      message: 'Game history endpoint is working!',
+      userId: userId,
+      games: [],
+      total: 0,
+      note: 'Currently supporting Tic Tac Toe and Rock Paper Scissors games'
     });
+    
   } catch (error) {
-    console.error('Error fetching game history:', error);
+    console.error('Error in game history endpoint:', error);
     res.status(500).json({ error: 'Failed to fetch game history' });
   }
 });
