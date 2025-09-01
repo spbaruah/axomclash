@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUsers, FaPlay, FaClock, FaStar, FaTimes, FaHandRock } from 'react-icons/fa';
+import { FaUsers, FaPlay, FaClock, FaStar, FaTimes, FaHandRock, FaHistory } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import toast from 'react-hot-toast';
@@ -8,6 +8,7 @@ import api from '../../services/axios';
 
 import TicTacToe from './TicTacToe';
 import RockPaperScissors from './RockPaperScissors';
+
 import BottomNavigation from '../common/BottomNavigation';
 import './Games.css';
 
@@ -25,6 +26,7 @@ const Games = () => {
 
   // Game configurations
   const gameTypes = [
+
     {
       id: 'tictactoe',
       name: 'Tic Tac Toe',
@@ -311,6 +313,7 @@ const Games = () => {
     if (!selectedGame) return null;
 
     switch (selectedGame.id) {
+
       case 'tictactoe':
         return <TicTacToe gameType={selectedGame} onBack={() => setSelectedGame(null)} />;
       case 'rockpaperscissors':
@@ -341,8 +344,21 @@ const Games = () => {
         animate={{ opacity: 1, y: 0 }}
         className="games-header"
       >
-        <h1>🎮 College Battle Games</h1>
-        <p>Challenge other colleges in exciting multiplayer games!</p>
+        <div className="header-content">
+          <div>
+            <h1>🎮 College Battle Games</h1>
+            <p>Challenge other colleges in exciting multiplayer games!</p>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="history-link-btn"
+            onClick={() => window.location.href = '/game-history'}
+          >
+            <FaHistory />
+            <span>History</span>
+          </motion.button>
+        </div>
       </motion.div>
 
       <motion.div
@@ -383,7 +399,11 @@ const Games = () => {
                 style={{ borderColor: game.color }}
               >
                 <div className="game-icon" style={{ color: game.color }}>
-                  <game.icon size={40} />
+                  {game.icon === '🎵' ? (
+                    <span className="emoji-icon" style={{ fontSize: '40px' }}>{game.icon}</span>
+                  ) : (
+                    <game.icon size={40} />
+                  )}
                 </div>
                 <h3>{game.name}</h3>
                 <p>{game.description}</p>
@@ -395,6 +415,11 @@ const Games = () => {
                 <div className="game-reward">
                   <span>Reward: {game.reward} points</span>
                 </div>
+                {game.isSinglePlayer && (
+                  <div className="single-player-badge">
+                    Single Player
+                  </div>
+                )}
                 <div className="game-actions">
                   <button 
                     className="play-btn primary"

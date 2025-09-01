@@ -28,12 +28,49 @@
 }
 
 .games-header {
-  text-align: center;
   margin-bottom: 32px;
   padding: 32px;
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
   border-radius: 20px;
   border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-content > div:first-child {
+  text-align: left;
+  flex: 1;
+}
+
+.history-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  white-space: nowrap;
+}
+
+.history-link-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.history-link-btn svg {
+  font-size: 1rem;
 }
 
 .games-header h1 {
@@ -148,8 +185,25 @@
   transition: all 0.3s ease;
 }
 
+.emoji-icon {
+  display: inline-block;
+  font-size: 3rem;
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
 .game-card:hover .game-icon {
   transform: scale(1.1) rotate(5deg);
+}
+
+.game-card:hover .emoji-icon {
+  transform: scale(1.1) rotate(5deg);
+  animation: pulse 0.6s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1.1) rotate(5deg); }
+  50% { transform: scale(1.2) rotate(10deg); }
 }
 
 .game-card h3 {
@@ -191,6 +245,19 @@
   font-weight: 600;
   color: #333;
   box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.single-player-badge {
+  background: linear-gradient(135deg, #a78bfa, #c084fc);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  display: inline-block;
 }
 
 .game-actions {
@@ -1400,5 +1467,42 @@
   .coming-soon-badge {
     padding: 5px 10px;
     font-size: 0.75rem;
+  }
+}
+
+/* Responsive styles for header */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .header-content > div:first-child {
+    text-align: center;
+  }
+  
+  .history-link-btn {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .games-header {
+    padding: 24px 20px;
+  }
+  
+  .games-header h1 {
+    font-size: 2rem;
+  }
+  
+  .games-header p {
+    font-size: 1rem;
+  }
+  
+  .history-link-btn {
+    padding: 8px 14px;
+    font-size: 0.8rem;
   }
 }

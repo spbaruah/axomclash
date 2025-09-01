@@ -11,6 +11,7 @@ import Home from './components/Home/Home';
 import Profile from './components/Profile/Profile';
 import UserProfile from './components/Profile/UserProfile';
 import Games from './components/Games/Games';
+import GameHistory from './components/Games/GameHistory';
 import Chat from './components/Chat/Chat';
 import Challenges from './components/Challenges/Challenges';
 import Leaderboard from './components/Leaderboard/Leaderboard';
@@ -116,6 +117,7 @@ const AppContent = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/games" element={<Games />} />
+        <Route path="/game-history" element={<GameHistory />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/challenges" element={<Challenges />} />
         <Route path="/leaderboard" element={<Leaderboard />} />

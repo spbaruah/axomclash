@@ -186,3 +186,8 @@ export const updateUserPoints = async (points, token) => {
     body: JSON.stringify({ points })
   }, token);
 };
+
+// Get user's game history
+export const getGameHistory = async (token) => {
+  return authenticatedRequest('/api/games/history', {}, token);
+};
