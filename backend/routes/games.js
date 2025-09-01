@@ -224,6 +224,14 @@ router.get('/history', verifyToken, async (req, res) => {
       });
     }
     
+    // Check total games in tic_tac_toe_games table
+    const [totalTicTacToe] = await db.promise().execute('SELECT COUNT(*) as total FROM tic_tac_toe_games');
+    console.log('📊 Total tic_tac_toe_games in database:', totalTicTacToe[0].total);
+    
+    // Check total games in rps_games table
+    const [totalRPS] = await db.promise().execute('SELECT COUNT(*) as total FROM rps_games');
+    console.log('📊 Total rps_games in database:', totalRPS[0].total);
+    
     // Get Tic Tac Toe games
     console.log('🔍 Fetching Tic Tac Toe games for user:', userId);
     const [ticTacToeGames] = await db.promise().execute(
@@ -235,8 +243,11 @@ router.get('/history', verifyToken, async (req, res) => {
        ORDER BY finished_at DESC`,
       [userId, userId]
     );
+    console.log('🎯 Tic Tac Toe games found for user:', ticTacToeGames.length);
+    console.log('🎯 Tic Tac Toe games data:', JSON.stringify(ticTacToeGames, null, 2));
 
     // Get RPS games
+    console.log('🔍 Fetching RPS games for user:', userId);
     const [rpsGames] = await db.promise().execute(
       `SELECT 
         id, room_id, players, scores, points_at_stake, status, 
@@ -246,6 +257,8 @@ router.get('/history', verifyToken, async (req, res) => {
        ORDER BY updated_at DESC`,
       [JSON.stringify({ userId: parseInt(userId) })]
     );
+    console.log('🎯 RPS games found for user:', rpsGames.length);
+    console.log('🎯 RPS games data:', JSON.stringify(rpsGames, null, 2));
 
     // Format Tic Tac Toe games
     const formattedTicTacToe = ticTacToeGames.map(game => ({
