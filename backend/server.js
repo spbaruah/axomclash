@@ -1515,7 +1515,8 @@ io.on('connection', (socket) => {
         rounds: playerRoom.currentRound,
         history: playerRoom.history,
         choices: choicesList,
-        outcomeByUser: outcomeByUser
+        outcomeByUser: outcomeByUser,
+        isGameFinished: playerRoom.currentRound >= playerRoom.maxRounds
       });
       
       // Check if game is over

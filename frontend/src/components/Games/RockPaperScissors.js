@@ -116,11 +116,11 @@ const RockPaperScissors = ({ gameType, onBack }) => {
         setPlayerChoice(null);
         setOpponentChoice(null);
         setGameResult(null);
-        if (data.rounds < maxRounds) {
+        if (data.isGameFinished || data.rounds >= maxRounds) {
+          setGameState('finished');
+        } else {
           setGameState('waiting');
           startCountdown();
-        } else {
-          setGameState('finished');
         }
       }, 3000);
     } catch (e) {
@@ -282,6 +282,17 @@ const RockPaperScissors = ({ gameType, onBack }) => {
     }
   };
 
+  const startNewMatchmaking = () => {
+    // Reset all game state
+    resetGame();
+    // Start new matchmaking
+    if (socket && userProfile) {
+      socket.emit('rpsJoinMatchmaking', { userId: userProfile.id, collegeId: userProfile.college_id });
+      setWaitingForOpponent(true);
+      setGameState('waiting');
+    }
+  };
+
   const getResultMessage = (result) => {
     switch (result) {
       case 'win': return 'You Win! 🎉';
@@ -399,12 +410,25 @@ const RockPaperScissors = ({ gameType, onBack }) => {
           </div>
 
           <div className="game-actions">
-            <button className="play-again-btn" onClick={resetGame}>
-              <FaPlay /> Play Again
-            </button>
-            <button className="new-game-btn" onClick={() => setGameMode(null)}>
-              New Game
-            </button>
+            {gameMode === 'friend' ? (
+              <>
+                <button className="play-again-btn" onClick={startNewMatchmaking}>
+                  <FaPlay /> Play Again
+                </button>
+                <button className="back-to-games-btn" onClick={onBack}>
+                  <FaArrowLeft /> Back to Games
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="play-again-btn" onClick={resetGame}>
+                  <FaPlay /> Play Again
+                </button>
+                <button className="new-game-btn" onClick={() => setGameMode(null)}>
+                  New Game
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

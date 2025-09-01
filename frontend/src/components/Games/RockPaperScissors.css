@@ -464,7 +464,7 @@
   justify-content: center;
 }
 
-.play-again-btn, .new-game-btn {
+.play-again-btn, .new-game-btn, .back-to-games-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
@@ -488,7 +488,11 @@
   background: linear-gradient(45deg, #2196F3, #1976D2);
 }
 
-.play-again-btn:hover, .new-game-btn:hover {
+.back-to-games-btn {
+  background: linear-gradient(45deg, #FF6B6B, #E53935);
+}
+
+.play-again-btn:hover, .new-game-btn:hover, .back-to-games-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
@@ -538,7 +542,7 @@
     align-items: center;
   }
 
-  .play-again-btn, .new-game-btn {
+  .play-again-btn, .new-game-btn, .back-to-games-btn {
     width: 100%;
     max-width: 300px;
     justify-content: center;
