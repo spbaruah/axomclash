@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import toast from 'react-hot-toast';
 import api from '../../services/axios';
-import LudoRaceGame from './LudoRaceGame';
+
 import TicTacToe from './TicTacToe';
 import RockPaperScissors from './RockPaperScissors';
 import BottomNavigation from '../common/BottomNavigation';
@@ -17,7 +17,7 @@ const Games = () => {
   const [gameRoom, setGameRoom] = useState(null);
   const [availableGames, setAvailableGames] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [joiningGame, setJoiningGame] = useState(false);
+
   const [waitingPlayers, setWaitingPlayers] = useState([]);
   
   const { userProfile } = useAuth();
@@ -25,18 +25,6 @@ const Games = () => {
 
   // Game configurations
   const gameTypes = [
-    {
-      id: 'ludo',
-      name: '🏁 Ludo Race',
-      description: '4-player race to finish - Get all 4 pieces home first to win!',
-      icon: FaDice,
-      players: 4,
-      duration: '10-15 min',
-      difficulty: 'Easy',
-      reward: 150,
-      color: '#FF6B6B',
-      autoCreate: true
-    },
     {
       id: 'tictactoe',
       name: 'Tic Tac Toe',
@@ -77,6 +65,17 @@ const Games = () => {
   ];
 
   const upcomingGames = [
+    {
+      id: 'ludo',
+      name: '🏁 Ludo Race',
+      description: '4-player race to finish - Get all 4 pieces home first to win!',
+      icon: '🎲',
+      color: '#FF6B6B',
+      players: '4',
+      duration: '10-15 min',
+      difficulty: 'Easy',
+      status: 'Coming Soon'
+    },
     {
       id: 'emoji-battle',
       name: 'Emoji Battle',
@@ -198,8 +197,7 @@ const Games = () => {
       socket.on('playerJoined', handlePlayerJoined);
       socket.on('roomCreated', handleRoomCreated);
       socket.on('waitingForPlayers', handleWaitingForPlayers);
-      socket.on('ludoRaceUpdate', handleLudoRaceUpdate);
-      socket.on('ludoRacePlayerJoined', handleLudoRacePlayerJoined);
+
     }
 
     return () => {
@@ -210,8 +208,7 @@ const Games = () => {
         socket.off('playerJoined');
         socket.off('roomCreated');
         socket.off('waitingForPlayers');
-        socket.off('ludoRaceUpdate');
-        socket.off('ludoRacePlayerJoined');
+
       }
     };
   }, [socket]);
@@ -258,84 +255,9 @@ const Games = () => {
     toast(`Waiting for ${4 - data.players.length} more players...`);
   };
 
-  // Ludo Race specific handlers
-  const handleLudoRaceUpdate = (data) => {
-    if (data.room) {
-      setGameRoom(data.room);
-      toast.success('Game room updated!');
-    }
-  };
 
-  const handleLudoRacePlayerJoined = (data) => {
-    if (data.room) {
-      setGameRoom(data.room);
-      toast.success(`${data.player.username} joined the race!`);
-      
-      // Check if we have enough players to start
-      if (data.room.players.length >= 2) {
-        toast.success('Ready to start! Click Start Game when ready.');
-      }
-    }
-  };
 
-  // Handle game actions for Ludo Race
-  const handleGameAction = (action, data) => {
-    if (!socket) return;
-    
-    switch (action) {
-      case 'rollDice':
-        socket.emit('rollDice', data);
-        break;
-      case 'movePiece':
-        socket.emit('movePiece', data);
-        break;
-      case 'resetGame':
-        socket.emit('resetGame', data);
-        break;
-      default:
-        console.log('Unknown game action:', action);
-    }
-  };
 
-  // Automatic room creation for Ludo Race
-  const joinLudoGame = async () => {
-    try {
-      setJoiningGame(true);
-      
-      // Create a new Ludo Race room
-      const response = await api.post('/api/games/ludo-race', {
-        name: `🏁 Ludo Race - ${userProfile.college_name}`,
-        max_players: 4,
-        points_at_stake: 150
-      });
-      
-      toast.success('Ludo Race room created! Waiting for players...');
-      
-      // Set the game room
-      setSelectedGame(gameTypes.find(g => g.id === 'ludo'));
-      setGameRoom(response.data.room);
-      
-      // Join socket room
-      if (socket) {
-        socket.emit('join-ludo-race-room', {
-          roomId: response.data.room.id,
-          userId: userProfile.id,
-          username: userProfile.username
-        });
-      }
-    } catch (error) {
-      console.error('Error creating Ludo Race room:', error);
-      
-      // Check if it's a service unavailable error
-      if (error.response?.status === 503) {
-        toast.error('🚧 Ludo Race is temporarily unavailable. Database migration in progress.');
-      } else {
-        toast.error('Failed to create game room. Please try again later.');
-      }
-    } finally {
-      setJoiningGame(false);
-    }
-  };
 
   // Create game for non-auto games
   const createGame = async (gameType) => {
@@ -379,29 +301,16 @@ const Games = () => {
   };
 
   const startGame = (gameType) => {
-    if (gameType.autoCreate) {
-      // For auto-create games like Ludo, just join the queue
-      if (gameType.id === 'ludo') {
-        joinLudoGame();
-      }
-    } else {
-      // For manual games, show the game board
-      // TicTacToe will show mode selection first
-      setSelectedGame(gameType);
-      setGameRoom(null);
-    }
+    // For manual games, show the game board
+    // TicTacToe will show mode selection first
+    setSelectedGame(gameType);
+    setGameRoom(null);
   };
 
   const renderGameBoard = () => {
     if (!selectedGame) return null;
 
     switch (selectedGame.id) {
-      case 'ludo':
-                return <LudoRaceGame
-          gameRoom={gameRoom}
-          currentPlayer={userProfile}
-          onGameAction={handleGameAction}
-        />;
       case 'tictactoe':
         return <TicTacToe gameType={selectedGame} onBack={() => setSelectedGame(null)} />;
       case 'rockpaperscissors':
@@ -488,30 +397,12 @@ const Games = () => {
                   <span>Reward: {game.reward} points</span>
                 </div>
                 <div className="game-actions">
-                  {game.autoCreate ? (
-                    <button 
-                      className="play-btn primary"
-                      onClick={() => startGame(game)}
-                      disabled={joiningGame}
-                    >
-                      {joiningGame ? (
-                        <>
-                          <FaSpinner className="spinning" /> Joining...
-                        </>
-                      ) : (
-                        <>
-                          <FaPlay /> Play
-                        </>
-                      )}
-                    </button>
-                  ) : (
-                    <button 
-                      className="play-btn primary"
-                      onClick={() => startGame(game)}
-                    >
-                      <FaPlay /> Play
-                    </button>
-                  )}
+                  <button 
+                    className="play-btn primary"
+                    onClick={() => startGame(game)}
+                  >
+                    <FaPlay /> Play
+                  </button>
                 </div>
               </motion.div>
             ))}
