@@ -43,6 +43,38 @@ router.get('/health', (req, res) => {
   });
 });
 
+// Database test endpoint
+router.get('/db-test', async (req, res) => {
+  console.log('🎮 Database test endpoint accessed');
+  try {
+    // Test basic database connection
+    const [result] = await db.promise().execute('SELECT 1 as test');
+    console.log('✅ Database connection successful:', result);
+    
+    // Check if required tables exist
+    const [tables] = await db.promise().execute('SHOW TABLES LIKE "tic_tac_toe_games"');
+    const [rpsTables] = await db.promise().execute('SHOW TABLES LIKE "rps_games"');
+    
+    res.json({
+      status: 'success',
+      message: 'Database connection working',
+      database_test: result[0],
+      tic_tac_toe_table_exists: tables.length > 0,
+      rps_table_exists: rpsTables.length > 0,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Database test failed:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Database connection failed',
+      error: error.message,
+      code: error.code,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Get active games
 router.get('/active', async (req, res) => {
   try {
@@ -322,7 +354,30 @@ router.get('/history', verifyToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     
+    console.log('🔍 Testing database connection...');
+    // Test database connection first
+    await db.promise().execute('SELECT 1 as test');
+    console.log('✅ Database connection successful');
+    
+    console.log('🔍 Checking if tic_tac_toe_games table exists...');
+    // Check if table exists
+    const [tableCheck] = await db.promise().execute('SHOW TABLES LIKE "tic_tac_toe_games"');
+    console.log('📊 tic_tac_toe_games table exists:', tableCheck.length > 0);
+    
+    if (tableCheck.length === 0) {
+      console.log('⚠️ tic_tac_toe_games table does not exist, returning empty result');
+      return res.json({
+        success: true,
+        games: [],
+        total: 0,
+        ticTacToeCount: 0,
+        rpsCount: 0,
+        note: 'Database tables not found - please run migrations'
+      });
+    }
+    
     // Get Tic Tac Toe games
+    console.log('🔍 Fetching Tic Tac Toe games for user:', userId);
     const [ticTacToeGames] = await db.promise().execute(
       `SELECT 
         id, player1_id, player2_id, winner_id, status, points_at_stake, 
